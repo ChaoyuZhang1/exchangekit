@@ -492,6 +492,29 @@ SHARE_CSS = """
 .share-plat{border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);border-radius:999px;padding:7px 14px;font-size:.8rem;cursor:pointer;transition:all .18s}
 .share-plat:hover{border-color:var(--ink);transform:translateY(-1px)}
 .share-hint{font-size:.72rem;color:var(--muted);margin:10px 0 0;line-height:1.5}
+/* prominent share CTA + floating button */
+.btn-share-hot{position:relative;display:inline-flex;align-items:center;gap:9px;border:0;cursor:pointer;font-weight:700;font-size:.95rem;padding:14px 24px;border-radius:999px;color:#04231a;background:linear-gradient(100deg,#34d399,#22d3ee,#a78bfa,#34d399);background-size:280% 100%;animation:exhotgrad 7s linear infinite;box-shadow:0 12px 32px rgba(34,211,238,.32),0 0 0 1px rgba(255,255,255,.28) inset;transition:transform .18s,box-shadow .18s}
+.btn-share-hot:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 18px 42px rgba(34,211,238,.42)}
+@keyframes exhotgrad{to{background-position:280% 50%}}
+.share-fab{position:fixed;right:20px;bottom:100px;z-index:70;display:inline-flex;align-items:center;gap:9px;padding:12px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.35);cursor:pointer;color:#04231a;font-weight:800;font-size:.86rem;background:linear-gradient(120deg,#34d399,#22d3ee);box-shadow:0 12px 30px rgba(34,211,238,.38);animation:exfabpulse 2.8s ease-in-out infinite;transition:transform .18s}
+.share-fab:hover{transform:translateY(-3px) scale(1.04)}
+.share-fab .sf-ic{width:22px;height:22px;display:grid;place-items:center;border-radius:7px;background:rgba(255,255,255,.4);font-size:.95rem;line-height:1}
+@keyframes exfabpulse{0%,100%{box-shadow:0 12px 30px rgba(34,211,238,.38),0 0 0 0 rgba(52,211,153,.5)}50%{box-shadow:0 12px 30px rgba(34,211,238,.38),0 0 0 15px rgba(52,211,153,0)}}
+@media (max-width:720px){.share-fab{right:12px;bottom:78px;padding:10px 14px;font-size:.8rem}.btn-share-hot{padding:12px 18px;font-size:.88rem}}
+/* KPI tiles + animated donut */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:18px 0 6px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.kpi-n{display:block;font-family:Georgia,serif;font-size:2.05rem;line-height:1.05;letter-spacing:-.02em}
+.kpi-l{display:block;color:var(--muted);font-size:.74rem;margin-top:6px;text-transform:uppercase;letter-spacing:.08em}
+.donut-wrap{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin:10px 0}
+.vz-donut{width:156px;height:156px;transform:rotate(-90deg);flex:0 0 auto}
+.vz-donut .bg{fill:none;stroke:rgba(148,163,184,.25);stroke-width:14}
+.vz-donut .fg{fill:none;stroke:#34d399;stroke-width:14;stroke-linecap:round;animation:donutDraw 1.25s cubic-bezier(.2,.75,.25,1) .12s both}
+@keyframes donutDraw{from{stroke-dashoffset:314.159}to{stroke-dashoffset:var(--target,0)}}
+@media (prefers-reduced-motion:reduce){.vz-donut .fg{animation:none}}
+.donut-txt{display:flex;flex-direction:column;gap:6px}
+.donut-txt .big{font-family:Georgia,serif;font-size:1.9rem;line-height:1}
+.donut-txt .muted{font-size:.78rem;color:var(--muted)}
 """
 
 
@@ -631,6 +654,17 @@ SHARE_JS = r"""
   qrImg=new Image();qrImg.onload=function(){st.qr=qrImg;if(modal)draw();};qrImg.src=D.qr;
   document.querySelectorAll('[data-share-open]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();open();});});
   if(new URLSearchParams(location.search).has('share')){window.addEventListener('load',open);}
+  // floating, always-visible share CTA
+  (function(){
+    if(document.querySelector('.share-fab')) return;
+    var lang=(document.documentElement.lang||'en').slice(0,2);
+    var TXT={zh:'分享卡片',ja:'共有カード',ko:'공유 카드',es:'Compartir',fr:'Partager',de:'Teilen'};
+    var fab=document.createElement('button');
+    fab.type='button'; fab.className='share-fab'; fab.setAttribute('aria-label','Share card');
+    fab.innerHTML='<span class="sf-ic" aria-hidden="true">✨</span><span class="sf-txt">'+(TXT[lang]||'Share card')+'</span>';
+    fab.addEventListener('click', function(){ open(); });
+    document.body.appendChild(fab);
+  })();
 })();
 """
 
@@ -979,6 +1013,30 @@ def main() -> int:
                 f'<span>{d["monthly"][i]}</span></div>'
                 for i in range(1, 13)
             )
+            closures_n = len(d["closures"])
+            weekdays_n = d["tradingDays"] + closures_n
+            open_pct = d["tradingDays"] / max(weekdays_n, 1)
+            donut = (
+                '<section class="sec"><h2>Market open vs closed in ' + str(y) + "</h2>"
+                '<div class="donut-wrap">'
+                f'<svg class="vz-donut" data-donut="{open_pct:.3f}" viewBox="0 0 120 120" aria-hidden="true">'
+                '<circle class="bg" cx="60" cy="60" r="50"></circle>'
+                f'<circle class="fg" cx="60" cy="60" r="50" style="stroke-dasharray:314.159;--target:'
+                f'{314.159 * (1 - open_pct):.1f}"></circle></svg>'
+                '<div class="donut-txt">'
+                f'<span class="big">{d["tradingDays"]}</span>'
+                f'<span class="muted">trading days in {y} · {closures_n} market holidays</span>'
+                f'<span class="muted">{open_pct * 100:.1f}% of weekdays the exchange is open</span>'
+                "</div></div>"
+                '<div class="kpi-row">'
+                f'<div class="kpi"><span class="kpi-n">{d["tradingDays"]}</span>'
+                '<span class="kpi-l">trading days</span></div>'
+                f'<div class="kpi"><span class="kpi-n">{closures_n}</span>'
+                '<span class="kpi-l">market holidays</span></div>'
+                f'<div class="kpi"><span class="kpi-n">{weekdays_n}</span>'
+                '<span class="kpi-l">weekdays in the year</span></div>'
+                "</div></section>"
+            )
             (ydir / "index.html").write_text(
                 page(f"{short} Market Holidays {y} — {d['tradingDays']} trading days",
                      f"{short} ({name}) market holidays and trading days in {y}: {d['tradingDays']} trading days, "
@@ -987,13 +1045,17 @@ def main() -> int:
                      f'<section class="hero"><p class="eyebrow">{short} · {y}</p>'
                      f'<h1><span class="flag">{flag_emoji(cc)}</span> {short} market holidays in {y}</h1>'
                      f'<div class="chips"><span class="chip">{d["tradingDays"]} trading days</span>'
-                     f'<span class="chip">{len(d["closures"])} market holidays</span></div></section>'
-                     '<section class="sec"><h2>Trading days by month</h2><div class="bars">' + bars + "</div></section>"
+                     f'<span class="chip">{len(d["closures"])} market holidays</span></div>'
+                     '<div class="cta-row" style="margin-top:20px">'
+                     '<button type="button" class="btn-share-hot" data-share-open>'
+                     '<span aria-hidden="true">✨</span> 生成分享卡片 · Share card</button>'
+                     f'<a class="btn ghost" href="calendar.ics">Add {y} to calendar</a>'
+                     "</div></section>"
+                     + donut
+                     + '<section class="sec"><h2>Trading days by month</h2><div class="bars">' + bars + "</div></section>"
                      '<section class="sec"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
-                     + '<p style="margin:18px 0 4px"><button type="button" class="btn ghost" data-share-open>'
-                     + "分享卡片 / Share card</button></p>"
                      + subscribe_block(short, slug, y, site_url)
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
                      base="../../../",
