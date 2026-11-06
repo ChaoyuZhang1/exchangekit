@@ -19,6 +19,11 @@ from datetime import date, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
+try:
+    import qrcode  # type: ignore
+except ImportError:  # pragma: no cover
+    qrcode = None
+
 import pandas_market_calendars as mcal
 
 ROOT = Path(__file__).resolve().parent
@@ -471,6 +476,105 @@ MOTION_JS = """
 """
 
 
+SHARE_CSS = """
+.share-modal{position:fixed;inset:0;z-index:80;background:rgba(8,12,18,.66);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.share-modal.on{display:flex}
+.share-panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;max-width:min(780px,96vw);max-height:94vh;overflow:auto;box-shadow:0 30px 80px rgba(10,16,24,.35)}
+.share-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:.95rem}
+.share-close{border:1px solid var(--line);background:var(--surface);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:1rem;line-height:1}
+.share-canvas{display:block;width:100%;max-height:52vh;height:auto;border-radius:12px;background:#111;margin:0 auto}
+.share-controls{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.share-controls label{font-size:.72rem;color:var(--muted);display:flex;flex-direction:column;gap:4px;text-transform:uppercase;letter-spacing:.06em}
+.share-controls select{padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);font-size:.85rem;text-transform:none}
+.share-btns{display:flex;gap:8px;flex-wrap:wrap}
+.share-btns .btn{padding:9px 16px;font-size:.85rem}
+"""
+
+
+SHARE_JS = r"""
+(function(){
+  var D=window.EX_SHARE; if(!D) return;
+  var TPL={
+    midnight:{bg:['#0c1a1f','#070d13'],ink:'#eaf3f2',sub:'#93aaa8',accent:'#34d399',cell:'rgba(255,255,255,.055)',line:'rgba(255,255,255,.14)'},
+    paper:{bg:['#f7f3e8','#ece4d2'],ink:'#1c1a16',sub:'#6b6152',accent:'#b5731a',cell:'rgba(255,255,255,.55)',line:'rgba(28,26,22,.14)'},
+    terminal:{bg:['#04080a','#081410'],ink:'#e7fff4',sub:'#79d6a4',accent:'#7cffb2',cell:'rgba(124,255,178,.07)',line:'rgba(124,255,178,.26)'},
+    dawn:{bg:['#ffe9ee','#e6efff'],ink:'#272138',sub:'#6a6280',accent:'#6d5cff',cell:'rgba(255,255,255,.6)',line:'rgba(39,33,56,.13)'}
+  };
+  var SIZES={story:[1080,1350],square:[1080,1080],wide:[1600,900]};
+  var st={tpl:'midnight',size:'story',qr:null};
+  var canvas=null,modal=null,qrImg=null;
+  function px(n){return Math.round(n);}
+  function rr(ctx,x,y,w,h,r){var q=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+q,y);ctx.arcTo(x+w,y,x+w,y+h,q);ctx.arcTo(x+w,y+h,x,y+h,q);ctx.arcTo(x,y+h,x,y,q);ctx.arcTo(x,y,x+w,y,q);ctx.closePath();}
+  function draw(){
+    if(!canvas)return;
+    var S=SIZES[st.size],W=S[0],H=S[1];canvas.width=W;canvas.height=H;
+    var ctx=canvas.getContext('2d'),t=TPL[st.tpl];
+    var g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,t.bg[0]);g.addColorStop(1,t.bg[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+    var P=px(W*0.06);
+    ctx.fillStyle=t.ink;ctx.font='700 '+px(W*0.034)+'px Georgia,serif';ctx.fillText('ExchangeKit',P,px(H*0.085));
+    ctx.fillStyle=t.sub;ctx.font='400 '+px(W*0.016)+'px system-ui';ctx.fillText('Trading days · market holidays',P,px(H*0.115));
+    ctx.textAlign='right';ctx.fillStyle=t.accent;ctx.font='700 '+px(W*0.05)+'px Georgia,serif';ctx.fillText(String(D.year),W-P,px(H*0.095));ctx.textAlign='left';
+    ctx.fillStyle=t.ink;ctx.font='600 '+px(W*0.056)+'px Georgia,"Songti SC","Microsoft YaHei",serif';
+    ctx.fillText(D.short+' market holidays',P,px(H*0.185));
+    ctx.fillStyle=t.sub;ctx.font='400 '+px(W*0.018)+'px system-ui';ctx.fillText(D.name,P,px(H*0.213));
+    var boxTop=px(H*0.25),boxH=px(H*0.10),boxW=px(W*0.42);
+    ctx.fillStyle=t.cell;rr(ctx,P,boxTop,boxW,boxH,px(W*0.014));ctx.fill();ctx.strokeStyle=t.line;ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=t.accent;ctx.font='700 '+px(W*0.082)+'px Georgia,serif';ctx.fillText(String(D.tradingDays),P+px(W*0.02),boxTop+px(H*0.062));
+    ctx.fillStyle=t.sub;ctx.font='500 '+px(W*0.0125)+'px system-ui';ctx.fillText('trading days in '+D.year,P+px(W*0.02),boxTop+px(H*0.085));
+    var box2x=P+boxW+px(W*0.02);
+    ctx.fillStyle=t.cell;rr(ctx,box2x,boxTop,boxW,boxH,px(W*0.014));ctx.fill();ctx.strokeStyle=t.line;ctx.stroke();
+    ctx.fillStyle=t.accent;ctx.font='700 '+px(W*0.082)+'px Georgia,serif';ctx.fillText(String(D.closures.length),box2x+px(W*0.02),boxTop+px(H*0.062));
+    ctx.fillStyle=t.sub;ctx.font='500 '+px(W*0.0125)+'px system-ui';ctx.fillText('market holidays',box2x+px(W*0.02),boxTop+px(H*0.085));
+    ctx.fillStyle=t.ink;ctx.font='700 '+px(W*0.016)+'px system-ui';ctx.fillText('Closure days',P,px(H*0.425));
+    var list=D.closures.slice(0,12), lh=px(H*0.027), per=Math.ceil(list.length/2);
+    list.forEach(function(c,i){
+      var col=Math.floor(i/per), row=i%per;
+      var x=P+col*px(W*0.44), y=px(H*0.455)+row*lh;
+      ctx.fillStyle=t.accent;ctx.font='600 '+px(W*0.0105)+'px system-ui';ctx.fillText(c.d,x,y);
+      ctx.fillStyle=t.ink;ctx.font='400 '+px(W*0.0105)+'px system-ui';ctx.fillText(c.n,x+px(W*0.072),y);
+    });
+    var fy=px(H*0.84);
+    ctx.strokeStyle=t.line;ctx.beginPath();ctx.moveTo(P,fy);ctx.lineTo(W-P,fy);ctx.stroke();
+    ctx.fillStyle=t.ink;ctx.font='600 '+px(W*0.017)+'px system-ui';ctx.fillText('ExchangeKit',P,fy+px(H*0.035));
+    ctx.fillStyle=t.sub;ctx.font='400 '+px(W*0.0105)+'px system-ui';ctx.fillText(D.url.replace('https://',''),P,fy+px(H*0.058));
+    ctx.fillText('Scan to open the calendar',P,fy+px(H*0.078));
+    if(st.qr){var qs=px(Math.min(W*0.105,H*0.105)),qx=W-P-qs,qy=fy+px(H*0.012);
+      ctx.fillStyle='#ffffff';rr(ctx,qx-px(W*0.006),qy-px(W*0.006),qs+px(W*0.012),qs+px(W*0.012),px(W*0.008));ctx.fill();
+      ctx.drawImage(st.qr,qx,qy,qs,qs);}
+  }
+  function ensure(){
+    if(modal)return modal;
+    var wrap=document.createElement('div');wrap.className='share-modal';
+    wrap.innerHTML='<div class="share-panel"><div class="share-head"><strong>Share card</strong>'+
+      '<button type="button" class="share-close" aria-label="Close">x</button></div>'+
+      '<canvas class="share-canvas"></canvas>'+
+      '<div class="share-controls"><label>Style<select data-share-tpl>'+Object.keys(TPL).map(function(k){return '<option value="'+k+'">'+k+'</option>';}).join('')+'</select></label>'+
+      '<label>Size<select data-share-size><option value="story">Story 4:5</option><option value="square">Square</option><option value="wide">Wide</option></select></label></div>'+
+      '<div class="share-btns"><button type="button" class="btn" data-share-dl>Download PNG</button>'+
+      '<button type="button" class="btn ghost" data-share-native>Share</button>'+
+      '<button type="button" class="btn ghost" data-share-copy>Copy image</button></div></div>';
+    document.body.appendChild(wrap);modal=wrap;canvas=wrap.querySelector('.share-canvas');
+    wrap.querySelector('.share-close').addEventListener('click',function(){wrap.classList.remove('on');});
+    wrap.addEventListener('click',function(e){if(e.target===wrap)wrap.classList.remove('on');});
+    wrap.querySelector('[data-share-tpl]').addEventListener('change',function(){st.tpl=this.value;draw();});
+    wrap.querySelector('[data-share-size]').addEventListener('change',function(){st.size=this.value;draw();});
+    wrap.querySelector('[data-share-dl]').addEventListener('click',function(){dl();});
+    wrap.querySelector('[data-share-native]').addEventListener('click',function(){nativeShare();});
+    wrap.querySelector('[data-share-copy]').addEventListener('click',function(){copy();});
+    return wrap;
+  }
+  function toBlob(cb){canvas.toBlob(function(b){cb(b);},'image/png');}
+  function dl(){toBlob(function(b){var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='exchangekit-'+D.slug+'-'+D.year+'.png';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},800);});}
+  function nativeShare(){toBlob(function(b){var f=new File([b],'exchangekit.png',{type:'image/png'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:'ExchangeKit',text:D.short+' '+D.year+' market holidays'}).catch(function(){});}else{dl();}});}
+  function copy(){toBlob(function(b){if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){alert('Copied image / 图片已复制');},function(){dl();});}else{dl();}});}
+  function open(){ensure().classList.add('on');draw();}
+  qrImg=new Image();qrImg.onload=function(){st.qr=qrImg;if(modal)draw();};qrImg.src=D.qr;
+  document.querySelectorAll('[data-share-open]').forEach(function(b){b.addEventListener('click',function(e){e.preventDefault();open();});});
+  if(new URLSearchParams(location.search).has('share')){window.addEventListener('load',open);}
+})();
+"""
+
+
 def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
          robots: str = "index,follow") -> str:
     nav = (
@@ -505,7 +609,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<link rel="canonical" href="{canonical}">'
         f'<meta name="robots" content="{robots}">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-        f"<style>{CSS}{MAP_CSS}</style></head><body>{nav}"
+        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
         f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}</body></html>"
     )
@@ -667,6 +771,19 @@ def main() -> int:
         base = slugify(short.lower())
         return base
 
+    qr_dir = out / "assets" / "qr"
+    qr_dir.mkdir(parents=True, exist_ok=True)
+    if qrcode is not None:
+        for code, name, short, cc, city, tz, _o, _c in EXCHANGES:
+            if (code, YEARS[0]) not in data:
+                continue
+            try:
+                qrcode.make(f"{site_url}/{slug_for(short)}/", box_size=4, border=1).save(
+                    qr_dir / f"{slug_for(short)}.png"
+                )
+            except Exception:  # noqa: BLE001
+                continue
+
     # homepage
     cards = []
     for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
@@ -815,9 +932,26 @@ def main() -> int:
                      '<section class="sec"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
+                     + '<p style="margin:18px 0 4px"><button type="button" class="btn ghost" data-share-open>'
+                     + "分享卡片 / Share card</button></p>"
                      + subscribe_block(short, slug, y, site_url)
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
-                     base="../../../"),
+                     base="../../../",
+                     script="<script>window.EX_SHARE="
+                     + json.dumps({
+                         "short": short,
+                         "name": name,
+                         "slug": slug,
+                         "year": y,
+                         "tradingDays": d["tradingDays"],
+                         "closures": [
+                             {"d": date.fromisoformat(c["date"]).strftime("%d %b"), "n": c["name"]}
+                             for c in d["closures"]
+                         ],
+                         "url": f"{site_url}/{slug}/{y}/",
+                         "qr": f"/assets/qr/{slug}.png",
+                     }, ensure_ascii=False)
+                     + ";</script><script>" + SHARE_JS + "</script>"),
                 encoding="utf-8",
             )
             urls.append(f"{slug}/{y}/")
