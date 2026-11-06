@@ -17,6 +17,7 @@ import shutil
 import sys
 from datetime import date, timedelta
 from pathlib import Path
+from urllib.parse import quote
 
 import pandas_market_calendars as mcal
 
@@ -131,6 +132,13 @@ tbody tr:hover{background:#faf7f0}
 .muted{color:var(--muted)}
 @media(max-width:640px){nav{gap:12px}nav a{font-size:.8rem}.head-inner{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}.hero{padding-top:40px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+.sub-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 18px}
+.sub-help{display:grid;gap:8px;margin:10px 0 14px}
+.sub-help details{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 14px}
+.sub-help summary{cursor:pointer;font-weight:600;font-size:.9rem}
+.sub-help ol{margin:8px 0 2px 18px;padding:0;color:var(--ink-soft);font-size:.88rem}
+.sub-help li{margin:4px 0}
+.sub-help code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:.82rem;word-break:break-all}
 """
 
 MOTION_JS = """
@@ -166,6 +174,20 @@ MOTION_JS = """
       } catch(e){}
     }
     update(); setInterval(update, 30000);
+  });
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var text = btn.getAttribute('data-copy');
+      function done(){ btn.textContent = 'Copied!'; setTimeout(function(){ btn.textContent = 'Copy .ics link'; }, 1600); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function(){});
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text;
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        ta.parentNode.removeChild(ta); done();
+      }
+    });
   });
 })();
 """
@@ -211,6 +233,45 @@ FAVICON = (
     '<path d="M14 46V30M26 46V22M38 46V34M50 46V18" stroke="#faf9f6" stroke-width="4" stroke-linecap="round"/>'
     '<circle cx="50" cy="18" r="4" fill="#b5731a"/></svg>'
 )
+
+
+def webcal_url(https_url: str) -> str:
+    return https_url.replace("https://", "webcal://", 1)
+
+
+def google_cal_url(ics_url: str) -> str:
+    return "https://calendar.google.com/calendar/r?cid=" + quote(webcal_url(ics_url), safe="")
+
+
+def outlook_cal_url(ics_url: str) -> str:
+    return "https://outlook.live.com/calendar/0/addfromweb?url=" + quote(ics_url, safe="")
+
+
+def subscribe_block(short: str, slug: str, year: int, site_url: str) -> str:
+    ics = f"{site_url}/{slug}/calendar-{year}.ics"
+    wc = webcal_url(ics)
+    return (
+        f'<section class="sec" id="subscribe"><h2>Subscribe to {short} market holidays {year}</h2>'
+        '<p class="sub">One URL — auto-updating calendar. Works with iOS, macOS, Google Calendar and Outlook; '
+        "no .ics file import needed.</p>"
+        '<div class="sub-actions">'
+        f'<a class="btn" href="{wc}">📱 Subscribe on iPhone / Mac</a>'
+        f'<a class="btn ghost" href="{google_cal_url(ics)}" target="_blank" rel="noopener">Add to Google Calendar</a>'
+        f'<a class="btn ghost" href="{outlook_cal_url(ics)}" target="_blank" rel="noopener">Add to Outlook</a>'
+        f'<button type="button" class="btn ghost" data-copy="{ics}">Copy .ics link</button>'
+        "</div>"
+        '<div class="sub-help">'
+        "<details open><summary>iPhone / iPad / Mac — subscribe (auto-updates)</summary><ol>"
+        "<li>Tap <strong>Subscribe on iPhone / Mac</strong> → Calendar opens → tap <strong>Subscribe</strong>.</li>"
+        "<li>Or Settings → Calendar → Accounts → Add Account → Other → <strong>Add Subscribed Calendar</strong>, "
+        f"paste <code>{ics}</code>.</li></ol></details>"
+        "<details><summary>Android (Google Calendar)</summary><ol>"
+        "<li>Google Calendar → Other calendars → “+” → From URL → paste the .ics link.</li></ol></details>"
+        "<details><summary>Outlook / Windows</summary><ol>"
+        "<li>Outlook → Calendar → Add calendar → Subscribe from web → paste the .ics link.</li></ol></details>"
+        "</div>"
+        f'<p class="muted">Direct .ics link (HTTPS): <code>{ics}</code></p></section>'
+    )
 
 
 def main() -> int:
@@ -352,12 +413,8 @@ def main() -> int:
                  '<section class="sec"><h2>By year</h2><div class="tbl-wrap"><table><thead><tr>'
                  "<th>Year</th><th>Trading days</th><th>Market holidays</th></tr></thead><tbody>"
                  + year_rows + "</tbody></table></div></section>"
-                 + '<section class="sec"><h2>Subscribe</h2><div class="chips">'
-                 + "".join(
-                     f'<a class="chip" href="calendar-{y}.ics">{y} .ics</a>' for y in YEARS if (code, y) in data
-                 )
-                 + "</div></section>"
-                 f'<p><a href="../index.html">← All exchanges</a></p>',
+                 + subscribe_block(short, slug, YEARS[1] if (code, YEARS[1]) in data else YEARS[0], site_url)
+                 + f'<p><a href="../index.html">← All exchanges</a></p>',
                  base="../../"),
             encoding="utf-8",
         )
@@ -393,8 +450,8 @@ def main() -> int:
                      '<section class="sec"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
-                     f'<p><a href="../index.html">← {short} overview</a> · '
-                     f'<a href="calendar-{y}.ics">Add {y} to calendar</a></p>',
+                     + subscribe_block(short, slug, y, site_url)
+                     + f'<p><a href="../index.html">← {short} overview</a></p>',
                      base="../../../"),
                 encoding="utf-8",
             )
@@ -456,6 +513,48 @@ def main() -> int:
         encoding="utf-8",
     )
     urls.append("api/")
+
+    # subscribe hub
+    sub_rows = []
+    for code, name, short, cc, city, tz, _o, _c in EXCHANGES:
+        if (code, YEARS[1]) not in data:
+            continue
+        slug = slug_for(short)
+        ics = f"{site_url}/{slug}/calendar-{YEARS[1]}.ics"
+        sub_rows.append(
+            f'<tr><td><a href="{slug}/index.html">{short}</a></td><td>{city}</td>'
+            f'<td><a href="{webcal_url(ics)}">📱 Subscribe</a> · '
+            f'<a href="{ics}">.ics</a> · '
+            f'<a href="{google_cal_url(ics)}" target="_blank" rel="noopener">Google</a> · '
+            f'<a href="{outlook_cal_url(ics)}" target="_blank" rel="noopener">Outlook</a></td></tr>'
+        )
+    sub_body = (
+        '<section class="hero"><p class="eyebrow">Calendar subscriptions</p>'
+        "<h1>Subscribe to exchange calendars</h1>"
+        '<p class="lede">One URL per exchange, auto-updating. iPhone, iPad, Mac, Android, Google Calendar and '
+        "Outlook all support URL subscriptions — no .ics file import.</p></section>"
+        '<section class="sec"><h2>How it works</h2><div class="sub-help">'
+        "<details open><summary>iPhone / iPad / Mac — subscribe (auto-updates)</summary><ol>"
+        "<li>Tap <strong>Subscribe</strong> → Calendar opens → tap <strong>Subscribe</strong>.</li>"
+        "<li>Or Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar.</li>"
+        "</ol></details>"
+        "<details><summary>Android (Google Calendar)</summary><ol>"
+        "<li>Other calendars → “+” → From URL → paste the .ics link.</li></ol></details>"
+        "<details><summary>Outlook / Windows</summary><ol>"
+        "<li>Add calendar → Subscribe from web → paste the .ics link.</li></ol></details>"
+        "</div></section>"
+        '<section class="sec"><h2>All exchanges</h2><div class="tbl-wrap"><table><thead><tr>'
+        f"<th>Exchange</th><th>City</th><th>Subscribe ({YEARS[1]})</th></tr></thead><tbody>"
+        + "".join(sub_rows) + "</tbody></table></div></section>"
+    )
+    (out / "subscribe").mkdir(exist_ok=True)
+    (out / "subscribe" / "index.html").write_text(
+        page("Subscribe to exchange calendars — one URL, auto-updating",
+             "Subscribe to exchange market-holiday calendars by URL — works with iPhone, Mac, Google Calendar and Outlook.",
+             f"{site_url}/subscribe/", sub_body, base="../"),
+        encoding="utf-8",
+    )
+    urls.append("subscribe/")
     for path, title, desc in [
         ("about", "About ExchangeKit", "About ExchangeKit, data sources and methodology."),
         ("privacy", "Privacy", "Privacy policy for ExchangeKit."),
@@ -474,6 +573,10 @@ def main() -> int:
         urls.append(f"{path}/")
 
     (out / "favicon.svg").write_text(FAVICON, encoding="utf-8")
+    (out / "_headers").write_text(
+        "/*.ics\n  Content-Type: text/calendar; charset=utf-8\n  Cache-Control: public, max-age=3600\n",
+        encoding="utf-8",
+    )
     (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {site_url}/sitemap.xml\n", encoding="utf-8")
     sitemap = ['<?xml version="1.0" encoding="UTF-8"?>',
                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
