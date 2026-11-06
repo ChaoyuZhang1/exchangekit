@@ -66,6 +66,43 @@ EXCHANGES = [
     ("XIDX", "Indonesia Stock Exchange", "IDX", "ID", "Jakarta", "Asia/Jakarta", "09:00", "15:50"),
 ]
 
+COORDS = {
+    "XNYS": (40.7069, -74.0113), "NASDAQ": (40.7580, -73.9855),
+    "SSE": (31.2358, 121.5075), "XHKG": (22.2840, 114.1620),
+    "XTKS": (35.6812, 139.7671), "XLON": (51.5155, -0.0922),
+    "XETR": (50.1109, 8.6821), "XPAR": (48.8566, 2.3522),
+    "XAMS": (52.3676, 4.9041), "XMIL": (45.4642, 9.1900),
+    "XMAD": (40.4168, -3.7038), "XSWX": (47.3769, 8.5417),
+    "XSTO": (59.3293, 18.0686), "XOSL": (59.9139, 10.7522),
+    "XCSE": (55.6761, 12.5683), "XHEL": (60.1699, 24.9384),
+    "XWAR": (52.2297, 21.0122), "XTSE": (43.6487, -79.3817),
+    "XASX": (-33.8688, 151.2093), "XNZE": (-41.2866, 174.7756),
+    "XNSE": (19.0760, 72.8777), "XKRX": (37.5665, 126.9780),
+    "XTAI": (25.0330, 121.5654), "XSES": (1.3521, 103.8198),
+    "XBKK": (13.7563, 100.5018), "XKLS": (3.1390, 101.6869),
+    "B3": (-23.5505, -46.6333), "XJSE": (-26.2041, 28.0473),
+    "XIST": (41.0082, 28.9784), "XMOS": (55.7558, 37.6173),
+    "XTAE": (32.0853, 34.7818), "XIDX": (-6.2088, 106.8456),
+}
+
+# country code -> approximate centre, used for "locate me"
+COUNTRY_POS = {
+    "US": (39.5, -98.4), "CA": (56.1, -106.3), "MX": (23.6, -102.6), "BR": (-14.2, -51.9),
+    "AR": (-38.4, -63.6), "CL": (-35.7, -71.5), "CO": (4.6, -74.3), "PE": (-9.2, -75.0),
+    "GB": (55.4, -3.4), "IE": (53.4, -8.2), "FR": (46.2, 2.2), "DE": (51.2, 10.4),
+    "ES": (40.5, -3.7), "IT": (41.9, 12.6), "NL": (52.1, 5.3), "BE": (50.5, 4.5),
+    "AT": (47.5, 14.6), "CH": (46.8, 8.2), "PT": (39.4, -8.2), "SE": (60.1, 18.6),
+    "NO": (60.5, 8.5), "DK": (56.3, 9.5), "FI": (61.9, 25.7), "PL": (51.9, 19.1),
+    "CZ": (49.8, 15.5), "HU": (47.2, 19.5), "GR": (39.1, 21.8), "RU": (61.5, 60.0),
+    "UA": (48.4, 31.2), "TR": (39.0, 35.2), "IL": (31.0, 34.9), "SA": (23.9, 45.1),
+    "AE": (23.4, 53.8), "EG": (26.8, 30.8), "ZA": (-30.6, 22.9), "NG": (9.1, 8.7),
+    "KE": (0.0, 37.9), "CN": (35.9, 104.2), "JP": (36.2, 138.3), "KR": (35.9, 127.8),
+    "TW": (23.7, 121.0), "HK": (22.3, 114.2), "SG": (1.35, 103.8), "MY": (4.2, 101.9),
+    "TH": (15.9, 101.0), "VN": (14.1, 108.3), "ID": (-2.5, 118.0), "PH": (12.9, 121.8),
+    "IN": (20.6, 78.9), "PK": (30.4, 69.3), "BD": (23.7, 90.4), "AU": (-25.3, 133.8),
+    "NZ": (-41.0, 174.9), "SA_": (23.9, 45.1),
+}
+
 CSS = """
 :root{--ink:#0f1115;--ink-soft:#2a2d36;--muted:#6b7080;--line:#e6e3da;--bg:#faf9f6;--surface:#fff;--soft:#f3f0e9;--accent:#0f6b5c;--accent-2:#0b4f44;--amber:#b5731a;--red:#b33a3a;--radius:20px;--radius-sm:14px;--ease:cubic-bezier(.16,1,.3,1);
 --font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;--font-display:ui-serif,Georgia,"Times New Roman","Songti SC",serif}
@@ -141,6 +178,149 @@ tbody tr:hover{background:#faf7f0}
 .sub-help code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:.82rem;word-break:break-all}
 """
 
+MAP_PATH = ""
+try:
+    MAP_PATH = json.loads((ROOT / "data" / "world_land.json").read_text(encoding="utf-8")).get("path") or ""
+except (OSError, ValueError):
+    MAP_PATH = ""
+
+MAP_CSS = """
+.map-badge{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 12px;margin-left:8px}
+.map-wrap{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:20px;overflow:hidden;background:radial-gradient(120% 90% at 30% 0%,#0e2b27 0%,#0a1420 55%,#060a11 100%);box-shadow:0 26px 70px rgba(10,16,24,.28)}
+#exmap{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
+#exmap.dragging{cursor:grabbing}
+.map-land{fill:#17332e;stroke:#26554c;stroke-width:.7;vector-effect:non-scaling-stroke}
+.ex-dot{cursor:pointer}
+.ex-dot .core{fill:#8a8f9c;transition:fill .3s}
+.ex-dot .ring{fill:none;stroke:transparent;transform-box:fill-box;transform-origin:center}
+.ex-dot.open .core{fill:#22c55e}
+.ex-dot.open .ring{stroke:#22c55e;animation:exping 1.9s ease-out infinite}
+.ex-dot.closed .core{fill:#ef4444}
+.ex-dot:hover .core{stroke:#fff;stroke-width:1.4}
+@keyframes exping{0%{transform:scale(.5);opacity:.85}75%{transform:scale(2.4);opacity:0}100%{opacity:0}}
+.you-dot .core{fill:#38bdf8}
+.you-dot .ring{fill:none;stroke:#38bdf8;transform-box:fill-box;transform-origin:center;animation:youpulse 2.2s ease-out infinite}
+@keyframes youpulse{0%{transform:scale(.6);opacity:.8}70%{transform:scale(3.2);opacity:0}100%{opacity:0}}
+.map-tip{position:absolute;pointer-events:none;background:rgba(10,16,26,.95);color:#e8edf5;border:1px solid rgba(255,255,255,.16);border-radius:11px;padding:8px 12px;font-size:.78rem;line-height:1.45;opacity:0;transform:translate(-50%,-125%);transition:opacity .15s;white-space:nowrap;z-index:5;box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.map-tip.on{opacity:1}
+.map-controls{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:6px}
+.map-controls button{width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(10,16,26,.68);color:#e8edf5;cursor:pointer;font-size:1rem;line-height:1;backdrop-filter:blur(6px);transition:background .18s,transform .18s}
+.map-controls button:hover{background:rgba(34,197,94,.22);transform:translateY(-1px)}
+.map-legend{position:absolute;left:12px;bottom:12px;display:flex;gap:14px;color:#c7d2e0;font-size:.74rem;background:rgba(10,16,26,.62);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 12px;backdrop-filter:blur(6px)}
+.map-legend .lg{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.lg.open{background:#22c55e;box-shadow:0 0 8px #22c55e}
+.lg.closed{background:#ef4444}
+.lg.you{background:#38bdf8;box-shadow:0 0 8px #38bdf8}
+@media(max-width:640px){.map-legend{font-size:.66rem;gap:10px}.map-controls button{width:30px;height:30px}}
+"""
+
+MAP_JS = """
+(function(){
+  var svg=document.getElementById('exmap'); if(!svg) return;
+  var g=document.getElementById('map-g'), tip=document.getElementById('map-tip');
+  var W=1000,H=500;
+  var COUNTRY_POS=""" + json.dumps(COUNTRY_POS, separators=(",", ":")) + """;
+  function px(lat,lon){ return [(lon+180)/360*W,(90-lat)/180*H]; }
+  var markers=[].slice.call(document.querySelectorAll('.ex-dot'));
+  markers.forEach(function(m){
+    var p=px(parseFloat(m.getAttribute('data-lat')),parseFloat(m.getAttribute('data-lon')));
+    m.setAttribute('transform','translate('+p[0].toFixed(1)+','+p[1].toFixed(1)+')');
+  });
+  function status(m){
+    var tz=m.getAttribute('data-tz'), open=m.getAttribute('data-open'), close=m.getAttribute('data-close');
+    try{
+      var parts=new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(new Date());
+      var map={}; parts.forEach(function(p){ map[p.type]=p.value; });
+      var hm=map.hour+':'+map.minute, wd=map.weekday;
+      var isOpen = (wd!=='Sat'&&wd!=='Sun') && hm>=open && hm<close;
+      return {open:isOpen,local:hm};
+    }catch(e){ return {open:false,local:'—'}; }
+  }
+  function applyStatus(){
+    var openCount=0;
+    markers.forEach(function(m){
+      var s=status(m);
+      m.classList.toggle('open',s.open); m.classList.toggle('closed',!s.open);
+      if(s.open) openCount++;
+    });
+    var badge=document.getElementById('map-open-count');
+    if(badge) badge.textContent=openCount+' / '+markers.length+' markets open now';
+  }
+  applyStatus(); setInterval(applyStatus,30000);
+  function showTip(m,ev){
+    var s=status(m);
+    tip.innerHTML='<strong>'+m.getAttribute('data-short')+'</strong> · '+m.getAttribute('data-city')+
+      '<br><span style="color:'+(s.open?'#22c55e':'#ef4444')+'">'+(s.open?'Open':'Closed')+
+      '</span> · local '+s.local;
+    tip.classList.add('on');
+    var rect=svg.parentNode.getBoundingClientRect();
+    tip.style.left=Math.max(70,Math.min(rect.width-70,ev.clientX-rect.left))+'px';
+    tip.style.top=(ev.clientY-rect.top)+'px';
+  }
+  markers.forEach(function(m){
+    m.addEventListener('pointerenter',function(e){ showTip(m,e); });
+    m.addEventListener('pointermove',function(e){ showTip(m,e); });
+    m.addEventListener('pointerleave',function(){ tip.classList.remove('on'); });
+    m.addEventListener('click',function(){ location.href=m.getAttribute('data-href'); });
+  });
+  var view={x:0,y:0,k:1};
+  function apply(){ g.setAttribute('transform','translate('+view.x.toFixed(2)+','+view.y.toFixed(2)+') scale('+view.k.toFixed(3)+')'); }
+  apply();
+  var drag=null;
+  svg.addEventListener('pointerdown',function(e){ drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y}; svg.classList.add('dragging'); try{svg.setPointerCapture(e.pointerId);}catch(err){} });
+  svg.addEventListener('pointermove',function(e){ if(!drag) return; var r=svg.getBoundingClientRect(); var k=W/r.width; view.x=drag.vx+(e.clientX-drag.x)*k; view.y=drag.vy+(e.clientY-drag.y)*k; apply(); });
+  function endDrag(){ drag=null; svg.classList.remove('dragging'); }
+  svg.addEventListener('pointerup',endDrag); svg.addEventListener('pointercancel',endDrag);
+  function zoomAt(factor,cx,cy){
+    var nk=Math.min(9,Math.max(1,view.k*factor));
+    view.x=cx-(cx-view.x)*nk/view.k; view.y=cy-(cy-view.y)*nk/view.k; view.k=nk; apply();
+  }
+  svg.addEventListener('wheel',function(e){ e.preventDefault(); var r=svg.getBoundingClientRect();
+    zoomAt(e.deltaY<0?1.18:1/1.18,(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height); },{passive:false});
+  var ctr=[W/2,H/2];
+  svg.parentNode.querySelectorAll('[data-map-zoom]').forEach(function(b){
+    b.addEventListener('click',function(){ zoomAt(b.getAttribute('data-map-zoom')==='in'?1.4:1/1.4,ctr[0],ctr[1]); });
+  });
+  var resetBtn=svg.parentNode.querySelector('[data-map-reset]');
+  if(resetBtn) resetBtn.addEventListener('click',function(){ flyTo(0,0,1); });
+  function animateTo(t,k){
+    var s={x:view.x,y:view.y,k:view.k}, t0=performance.now(), dur=650;
+    function step(now){
+      var p=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-p,3);
+      view.x=s.x+(t.x-s.x)*e; view.y=s.y+(t.y-s.y)*e; view.k=s.k+(t.k-s.k)*e; apply();
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function flyTo(lat,lon,k){
+    var p=px(lat,lon); var nk=k||2.2;
+    animateTo({x:W/2-p[0]*nk,y:H/2-p[1]*nk,k:nk});
+  }
+  function addYou(lat,lon){
+    var p=px(lat,lon);
+    var ns='http://www.w3.org/2000/svg';
+    var yg=document.createElementNS(ns,'g');
+    yg.setAttribute('class','you-dot'); yg.setAttribute('transform','translate('+p[0].toFixed(1)+','+p[1].toFixed(1)+')');
+    var r1=document.createElementNS(ns,'circle'); r1.setAttribute('class','ring'); r1.setAttribute('r','10');
+    var r2=document.createElementNS(ns,'circle'); r2.setAttribute('class','core'); r2.setAttribute('r','3.2');
+    yg.appendChild(r1); yg.appendChild(r2); g.appendChild(yg);
+    g.appendChild(yg);
+  }
+  function locate(){
+    fetch('/geo').then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      var cc=d&&(d.country||''); cc=(cc||'').toUpperCase();
+      var pos=COUNTRY_POS[cc];
+      if(pos){ addYou(pos[0],pos[1]); flyTo(pos[0],pos[1],2.3); }
+    }).catch(function(){
+      try{ var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''; if(/Shanghai|Chongqing|Urumqi/.test(tz)){ var p=COUNTRY_POS['CN']; addYou(p[0],p[1]); flyTo(p[0],p[1],2.3); } }catch(e){}
+    });
+  }
+  var locBtn=svg.parentNode.querySelector('[data-map-locate]');
+  if(locBtn) locBtn.addEventListener('click',locate);
+  locate();
+})();
+"""
+
 MOTION_JS = """
 (function(){
   var head=document.querySelector('.site-head');
@@ -208,6 +388,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
         f'<nav><a href="{base}index.html">Exchanges</a>'
+        f'<a href="{base}index.html#map">Live map</a>'
         f'<a href="{base}index.html#closures">Holidays</a>'
         f'<a href="{base}api/index.html">API</a>'
         f'<a href="{base}about/index.html">About</a></nav>'
@@ -231,7 +412,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<link rel="canonical" href="{canonical}">'
         f'<meta name="robots" content="{robots}">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-        f"<style>{CSS}</style></head><body>{nav}"
+        f"<style>{CSS}{MAP_CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
         f"<script>{MOTION_JS}</script>{script}</body></html>"
     )
@@ -408,6 +589,40 @@ def main() -> int:
             f'<p>{current["tradingDays"]} trading days in {current_year}</p>'
             f'<p class="status"><span class="dot"></span><span data-live-label>{city}</span></p></a>'
         )
+    map_markers = []
+    for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
+        if (code, YEARS[0]) not in data:
+            continue
+        lat, lon = COORDS.get(code, (0.0, 0.0))
+        map_markers.append(
+            f'<g class="ex-dot" data-lat="{lat}" data-lon="{lon}" data-short="{short}" '
+            f'data-city="{city}" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" '
+            f'data-href="{slug_for(short)}/index.html">'
+            '<circle class="ring" r="9"></circle><circle class="core" r="3.6"></circle></g>'
+        )
+    map_section = (
+        '<section class="sec" id="map"><h2>Market map — live open / closed</h2>'
+        '<p class="sub">Every exchange on one interactive map. Green pulsing dots are markets open right now; '
+        "we locate you automatically. Drag to pan, scroll to zoom."
+        '<span class="map-badge" id="map-open-count">loading…</span></p>'
+        '<div class="map-wrap">'
+        '<svg id="exmap" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" role="img" '
+        'aria-label="World map of stock exchanges">'
+        '<g id="map-g"><path class="map-land" d="' + MAP_PATH + '"></path>'
+        + "".join(map_markers)
+        + '</g></svg>'
+        '<div class="map-tip" id="map-tip"></div>'
+        '<div class="map-controls">'
+        '<button type="button" data-map-zoom="in" aria-label="Zoom in">+</button>'
+        '<button type="button" data-map-zoom="out" aria-label="Zoom out">−</button>'
+        '<button type="button" data-map-reset aria-label="Reset view">⟲</button>'
+        '<button type="button" data-map-locate aria-label="Locate me">◎</button>'
+        "</div>"
+        '<div class="map-legend"><span><i class="lg open"></i>Open now</span>'
+        '<span><i class="lg closed"></i>Closed</span><span><i class="lg you"></i>You</span></div>'
+        "</div></section>"
+    )
+
     faq = [
         ("What counts as a market holiday?",
          "A weekday on which the exchange is closed. Weekends are always non-trading days and are not listed."),
@@ -422,7 +637,8 @@ def main() -> int:
         "<h1>Market holidays and trading days.</h1>"
         '<p class="lede">Every closure day for the world\'s major stock exchanges, with trading-day counts, '
         "monthly breakdowns, one-click .ics subscriptions and a free JSON API.</p></section>"
-        '<section class="sec"><h2>Exchanges</h2>'
+        + map_section
+        + '<section class="sec"><h2>Exchanges</h2>'
         '<p class="sub">Trading days and the next closure for ' + str(current_year) + '.</p>'
         '<div class="grid">' + "".join(cards) + "</div></section>"
         '<section class="ad">[Ad slot]</section>'
@@ -436,7 +652,7 @@ def main() -> int:
     (out / "index.html").write_text(
         page("Market Holidays & Trading Days — ExchangeKit",
              "Trading days and market holidays for NYSE, NASDAQ, SSE, HKEX, TSE, LSE, Xetra and 25 more exchanges. Free .ics and JSON API.",
-             site_url + "/", body),
+             site_url + "/", body, script=MAP_JS),
         encoding="utf-8",
     )
     urls.append("")
