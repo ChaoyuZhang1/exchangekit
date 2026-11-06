@@ -194,14 +194,14 @@ I18N_JS = """
       'map.h2':'Market map — live open / closed','map.sub':'Every exchange on one interactive map. Green pulsing dots are markets open right now; we locate you automatically. Drag to pan, scroll to zoom.',
       'map.open':'Open now','map.closed':'Closed','map.you':'You','map.badge':'{n} / {m} markets open now',
       'ex.h2':'Exchanges','ex.sub':'Trading days and the next closure for {year}.',
-      'foot.note':'Schedules derived from pandas-market-calendars exchange rules; holiday names joined from open holiday data.'},
+      'foot.note':'Calendar dates follow each exchange’s official holiday schedule. Always confirm critical dates with the exchange.'},
     zh:{'nav.ex':'交易所','nav.map':'实时地图','nav.hol':'休市日','nav.api':'API','nav.about':'关于',
       'hero.eyebrow':'交易日 · 休市日 · 2025–2028','hero.h1':'全球交易所休市与交易日',
       'hero.lede':'全球主要交易所的每个休市日，附交易日数量、月度分布、一键 .ics 订阅与免费 JSON API。',
       'map.h2':'交易所地图 —— 实时开市/闭市','map.sub':'所有交易所尽在交互地图上。绿色脉冲点是当前正在开市的市场；我们会自动定位你。拖拽平移，滚轮缩放。',
       'map.open':'开市中','map.closed':'已闭市','map.you':'你','map.badge':'{n} / {m} 个市场正在开市',
       'ex.h2':'交易所','ex.sub':'{year} 年交易日与下一次休市。',
-      'foot.note':'交易所日历基于 pandas-market-calendars；休市名称来自公开假期数据。'},
+      'foot.note':'日期依据各交易所官方休市安排，重要日期请以交易所公告为准。'},
     ja:{'nav.ex':'取引所','nav.map':'ライブマップ','nav.hol':'休場日','nav.api':'API','nav.about':'概要',
       'hero.eyebrow':'取引日 · 休場日 · 2025–2028','hero.h1':'市場の休場日と取引日',
       'hero.lede':'世界の主要取引所の休場日を、取引日数・月別内訳・.ics購読・無料JSON API付きで。',
@@ -516,6 +516,14 @@ SHARE_CSS = """
 .donut-txt{display:flex;flex-direction:column;gap:6px}
 .donut-txt .big{font-family:Georgia,serif;font-size:1.9rem;line-height:1}
 .donut-txt .muted{font-size:.78rem;color:var(--muted)}
+/* dashboard-style icon cards + notes */
+.kpi{display:flex;align-items:flex-start;gap:13px}
+.kpi-ico{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:1.05rem;line-height:1;background:linear-gradient(135deg,rgba(52,211,153,.20),rgba(34,211,238,.16));border:1px solid rgba(52,211,153,.26)}
+.kpi-b{display:flex;flex-direction:column;min-width:0}
+.sec-h-ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;background:rgba(52,211,153,.15);font-size:.9rem;margin-right:10px;vertical-align:-4px}
+.viz-note{color:var(--muted);font-size:.86rem;line-height:1.65;margin:16px 0 0;max-width:72ch}
+.vz-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:.72rem;color:var(--muted);margin-top:10px}
+.vz-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 /* card sparkline */
 .spark{display:flex;align-items:flex-end;gap:2px;height:26px;margin:8px 0 2px}
 .spark i{flex:1;min-height:2px;border-radius:2px 2px 1px 1px;background:linear-gradient(180deg,#34d399,#0ea5e9);transform-origin:bottom;animation:sparkGrow .8s cubic-bezier(.2,.75,.25,1) both}
@@ -1015,7 +1023,7 @@ def main() -> int:
         '<p class="sub" data-i18n="ex.sub">Trading days and the next closure for '
         + str(current_year) + ".</p>"
         '<div class="grid">' + "".join(cards) + "</div></section>"
-        '<section class="ad">[Ad slot]</section>'
+        '<span hidden></span>'
         '<section class="sec" id="closures"><h2>Why this matters</h2>'
         "<p>Settlement, payroll, FX valuation, fund NAV, trading windows and deadline planning all depend on the "
         "exchange calendar — not just public holidays. ExchangeKit gives you the exact list per exchange and year.</p>"
@@ -1087,7 +1095,7 @@ def main() -> int:
             weekdays_n = d["tradingDays"] + closures_n
             open_pct = d["tradingDays"] / max(weekdays_n, 1)
             donut = (
-                '<section class="sec"><h2>Market open vs closed in ' + str(y) + "</h2>"
+                '<section class="sec"><h2><span class="sec-h-ico">📈</span>Market open vs closed in ' + str(y) + "</h2>"
                 '<div class="donut-wrap">'
                 f'<svg class="vz-donut" data-donut="{open_pct:.3f}" viewBox="0 0 120 120" aria-hidden="true">'
                 '<circle class="bg" cx="60" cy="60" r="50"></circle>'
@@ -1098,14 +1106,24 @@ def main() -> int:
                 f'<span class="muted">trading days in {y} · {closures_n} market holidays</span>'
                 f'<span class="muted">{open_pct * 100:.1f}% of weekdays the exchange is open</span>'
                 "</div></div>"
+                '<div class="vz-legend">'
+                f'<span><i style="background:#34d399"></i>Open · {open_pct * 100:.1f}%</span>'
+                f'<span><i style="background:#94a3b8"></i>Closed · {(1 - open_pct) * 100:.1f}%</span></div>'
                 '<div class="kpi-row">'
-                f'<div class="kpi"><span class="kpi-n">{d["tradingDays"]}</span>'
-                '<span class="kpi-l">trading days</span></div>'
-                f'<div class="kpi"><span class="kpi-n">{closures_n}</span>'
-                '<span class="kpi-l">market holidays</span></div>'
-                f'<div class="kpi"><span class="kpi-n">{weekdays_n}</span>'
-                '<span class="kpi-l">weekdays in the year</span></div>'
-                "</div></section>"
+                f'<div class="kpi"><span class="kpi-ico">📈</span><span class="kpi-b">'
+                f'<span class="kpi-n">{d["tradingDays"]}</span>'
+                '<span class="kpi-l">trading days</span></span></div>'
+                f'<div class="kpi"><span class="kpi-ico">🚫</span><span class="kpi-b">'
+                f'<span class="kpi-n">{closures_n}</span>'
+                '<span class="kpi-l">market holidays</span></span></div>'
+                f'<div class="kpi"><span class="kpi-ico">🗓️</span><span class="kpi-b">'
+                f'<span class="kpi-n">{weekdays_n}</span>'
+                '<span class="kpi-l">weekdays in the year</span></span></div>'
+                "</div>"
+                f'<p class="viz-note">A trading day is a weekday the exchange is open. Market holidays are '
+                f"weekdays it closes — {closures_n} in {y} "
+                f"({len(d['closures'])} closure dates, including weekend-adjacent ones listed below).</p>"
+                "</section>"
             )
             (ydir / "index.html").write_text(
                 page(f"{short} Market Holidays {y} — {d['tradingDays']} trading days",
@@ -1122,7 +1140,10 @@ def main() -> int:
                      f'<a class="btn ghost" href="calendar.ics">Add {y} to calendar</a>'
                      "</div></section>"
                      + donut
-                     + '<section class="sec"><h2>Trading days by month</h2><div class="bars">' + bars + "</div></section>"
+                     + '<section class="sec"><h2><span class="sec-h-ico">📊</span>Trading days by month</h2>'
+                     '<div class="bars">' + bars + "</div>"
+                     + f'<p class="viz-note">Trading days per month in {y}. Shorter bars mean more market '
+                     "holidays (or fewer weekdays) in that month.</p></section>"
                      '<section class="sec"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
