@@ -202,7 +202,8 @@ MOTION_JS = """
 """
 
 
-def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "") -> str:
+def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
+         robots: str = "index,follow") -> str:
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
@@ -228,7 +229,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f"<title>{title}</title>"
         f'<meta name="description" content="{desc}">'
         f'<link rel="canonical" href="{canonical}">'
-        '<meta name="robots" content="index,follow">'
+        f'<meta name="robots" content="{robots}">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         f"<style>{CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
@@ -266,8 +267,7 @@ def subscribe_block(short: str, slug: str, year: int, site_url: str) -> str:
         '<div class="sub-actions">'
         f'<a class="btn" href="{wc}">📱 iOS / macOS — one-tap subscribe</a>'
         f'<a class="btn ghost" href="{google_cal_url(ics)}" target="_blank" rel="noopener">Add to Google Calendar</a>'
-        '<a class="btn ghost" href="https://calendar.google.com/calendar/r/settings/addbyurl" '
-        'target="_blank" rel="noopener">Android — Add by URL</a>'
+        f'<a class="btn ghost" href="/go/{slug}/">Android — one-tap setup</a>'
         f'<a class="btn ghost" href="{outlook_cal_url(ics)}" target="_blank" rel="noopener">Add to Outlook</a>'
         f'<button type="button" class="btn ghost" data-copy="{ics}">Copy .ics link</button>'
         "</div>"
@@ -286,6 +286,47 @@ def subscribe_block(short: str, slug: str, year: int, site_url: str) -> str:
         "</div>"
         f'<p class="muted">Direct .ics link (HTTPS): <code>{ics}</code></p></section>'
     )
+
+
+def go_page(short: str, slug: str, year: int, site_url: str) -> str:
+    ics = f"{site_url}/{slug}/calendar-{year}.ics"
+    wc = webcal_url(ics)
+    body = (
+        f'<section class="hero"><p class="eyebrow">Android setup · {short} {year}</p>'
+        f"<h1>Subscribe to {short} market holidays</h1>"
+        '<p class="lede">We are copying the calendar link to your clipboard. Paste it into '
+        "Google Calendar (Add by URL) or a subscription app — it updates automatically.</p></section>"
+        '<div class="callout" data-go-status>Preparing your subscription link…</div>'
+        '<div class="sub-actions">'
+        '<a class="btn" href="https://calendar.google.com/calendar/r/settings/addbyurl" '
+        'target="_blank" rel="noopener">Open Google Calendar → Add by URL</a>'
+        f'<button type="button" class="btn ghost" data-copy="{ics}">Copy link</button>'
+        f'<a class="btn ghost" href="{ics}">Download .ics</a>'
+        f'<a class="btn ghost" href="/{slug}/{year}/index.html">Back to {short} {year}</a>'
+        "</div>"
+        '<section class="sec"><h2>2 steps</h2><div class="sub-help">'
+        "<details open><summary>Google Calendar (Android browser or desktop)</summary><ol>"
+        "<li>The .ics link is already copied (if not, tap <strong>Copy link</strong>).</li>"
+        "<li>Open Google Calendar → Settings → <strong>Add calendar → From URL</strong> → "
+        "paste the link → Add calendar.</li></ol></details>"
+        "<details><summary>ICSx5 (Android app — syncs into the system calendar)</summary><ol>"
+        "<li>Install ICSx5 → Add calendar → paste the copied link.</li></ol></details>"
+        "<details><summary>iPhone / Mac</summary><ol>"
+        f'<li><a href="{wc}">Subscribe with Apple Calendar</a> (webcal link, auto-updates).</li>'
+        "</ol></details></div></section>"
+        f'<p class="muted">Calendar link: <code>{ics}</code></p>'
+        "<script>(function(){var t=" + json.dumps(ics) + ";"
+        "function ok(){var s=document.querySelector('[data-go-status]');"
+        "if(s){s.textContent='✓ Link copied — now paste it into Google Calendar (Add calendar → From URL).';}}"
+        "function copy(){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,ok);}"
+        "else{var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();"
+        "try{document.execCommand('copy');}catch(e){}a.parentNode.removeChild(a);ok();}}"
+        "copy();document.querySelectorAll('[data-copy]').forEach(function(b){b.addEventListener('click',copy);});"
+        "})();</script>"
+    )
+    return page(f"Subscribe to {short} {year} market holidays — Android one-tap setup",
+                f"Guided Android setup to subscribe to {short} market holidays via Google Calendar From URL or ICSx5.",
+                f"{site_url}/go/{slug}/", body, base="../../", robots="noindex,follow")
 
 
 def main() -> int:
@@ -552,8 +593,12 @@ def main() -> int:
         "<li>Tap <strong>Subscribe</strong> → Calendar opens → tap <strong>Subscribe</strong>.</li>"
         "<li>Or Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar.</li>"
         "</ol></details>"
-        "<details><summary>Android (Google Calendar)</summary><ol>"
-        "<li>Other calendars → “+” → From URL → paste the .ics link.</li></ol></details>"
+        "<details><summary>Android — Google Calendar can't open webcal links; use one of these</summary><ol>"
+        "<li>Easiest: open <a href=\"/go/\"><strong>Android one-tap setup</strong></a> — it copies the link "
+        "and opens Google Calendar's “Add by URL”.</li>"
+        "<li>Browser → Google Calendar → Add calendar → From URL → paste the .ics link.</li>"
+        "<li>Or install <strong>ICSx5</strong> to sync the .ics subscription into the Android system calendar.</li>"
+        "</ol></details>"
         "<details><summary>Outlook / Windows</summary><ol>"
         "<li>Add calendar → Subscribe from web → paste the .ics link.</li></ol></details>"
         "</div></section>"
@@ -569,6 +614,41 @@ def main() -> int:
         encoding="utf-8",
     )
     urls.append("subscribe/")
+
+    # Android one-tap setup pages (/go/{exchange}/) + hub
+    go_year = YEARS[2] if YEARS[2] in {y for (_c, y) in data.keys()} else YEARS[1]
+    (out / "go").mkdir(exist_ok=True)
+    go_rows = []
+    for code, name, short, cc, city, tz, _o, _c in EXCHANGES:
+        if (code, go_year) not in data:
+            continue
+        slug = slug_for(short)
+        gdir = out / "go" / slug
+        gdir.mkdir(exist_ok=True)
+        (gdir / "index.html").write_text(go_page(short, slug, go_year, site_url), encoding="utf-8")
+        ics = f"{site_url}/{slug}/calendar-{go_year}.ics"
+        go_rows.append(
+            f'<tr><td><a href="{slug}/index.html">{short}</a></td><td>{city}</td>'
+            f'<td><a href="{slug}/index.html">📱 One-tap setup</a></td>'
+            f'<td><a href="{ics}">.ics</a></td></tr>'
+        )
+    go_body = (
+        '<section class="hero"><p class="eyebrow">Android subscriptions</p>'
+        "<h1>One-tap setup for Android</h1>"
+        '<p class="lede">Pick an exchange: we copy the calendar link and open Google Calendar’s '
+        "“Add by URL”, where you paste it once. After that the calendar updates automatically.</p></section>"
+        '<section class="sec"><h2>All exchanges</h2><div class="tbl-wrap"><table><thead><tr>'
+        f"<th>Exchange</th><th>City</th><th>Setup</th><th>Direct .ics</th></tr></thead><tbody>"
+        + "".join(go_rows) + "</tbody></table></div></section>"
+        '<div class="callout">Android has no system handler for <code>webcal://</code> links — so we copy '
+        "the link and open Google Calendar for you.</div>"
+    )
+    (out / "go" / "index.html").write_text(
+        page("Android one-tap calendar subscription setup",
+             "Guided Android setup to subscribe to exchange market-holiday calendars via Google Calendar From URL or ICSx5.",
+             f"{site_url}/go/", go_body, base="../", robots="noindex,follow"),
+        encoding="utf-8",
+    )
     for path, title, desc in [
         ("about", "About ExchangeKit", "About ExchangeKit, data sources and methodology."),
         ("privacy", "Privacy", "Privacy policy for ExchangeKit."),
