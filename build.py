@@ -1197,6 +1197,12 @@ def main() -> int:
         '<div class="card" style="margin-top:10px"><code>GET /api/v1/exchange/{CODE}/{YYYY}.json</code></div>'
         '<p class="muted" style="margin-top:10px">Example: <a href="/api/v1/exchange/XNYS/2026.json">'
         "/api/v1/exchange/XNYS/2026.json</a></p></section>"
+        '<section class="sec"><h2>Notes</h2><ul>'
+        "<li>Rate limit: 240 requests/minute per IP; over the limit returns HTTP 429 with "
+        "<code>Retry-After</code>. Responses are cacheable for a day.</li>"
+        "<li>Free under a generous fair-use policy. Commercial or high-volume use? "
+        'See <a href="../support/index.html">Support</a>.</li>'
+        "</ul></section>"
     )
     (out / "api" / "index.html").write_text(
         page("Exchange Calendar API — static JSON", "Free static JSON API for exchange trading days and market holidays.",
