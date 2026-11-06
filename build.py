@@ -242,6 +242,7 @@ I18N_JS = """
     document.documentElement.lang=lang;
     document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
     document.querySelectorAll('[data-hk-lang]').forEach(function(s){ s.value=lang; });
+    document.dispatchEvent(new CustomEvent('hk-lang-changed'));
   }
   function set(l){ if(!D[l]) return; lang=l; try{localStorage.setItem('ex_lang',l);}catch(e){} apply(); }
   window.HKI18N={t:t,set:set,lang:function(){return lang;},apply:apply};
@@ -333,6 +334,7 @@ MAP_JS = """
     }
   }
   applyStatus(); setInterval(applyStatus,30000);
+  document.addEventListener('hk-lang-changed', applyStatus);
   function showTip(m,ev){
     var s=status(m);
     var openTxt=(window.HKI18N?window.HKI18N.t(s.open?'map.open':'map.closed'):(s.open?'Open':'Closed'));
