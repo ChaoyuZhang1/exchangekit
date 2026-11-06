@@ -243,9 +243,10 @@ I18N_JS = """
   try{ var saved=localStorage.getItem('ex_lang'); if(saved&&D[saved]) lang=saved; }catch(e){}
   function detect(){ var n=(navigator.language||'en').toLowerCase(), b=n.split('-')[0]; return D[b]?b:'en'; }
   function t(k){ var d=D[lang]||D.en; return d[k]||D.en[k]||k; }
+  var YEAR=window.EX_FOCUS_YEAR||new Date().getFullYear();
   function apply(){
     document.documentElement.lang=lang;
-    document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')).replace('{year}', YEAR); });
     document.querySelectorAll('[data-hk-lang]').forEach(function(s){ s.value=lang; });
     document.dispatchEvent(new CustomEvent('hk-lang-changed'));
   }
@@ -515,6 +516,12 @@ SHARE_CSS = """
 .donut-txt{display:flex;flex-direction:column;gap:6px}
 .donut-txt .big{font-family:Georgia,serif;font-size:1.9rem;line-height:1}
 .donut-txt .muted{font-size:.78rem;color:var(--muted)}
+/* card sparkline */
+.spark{display:flex;align-items:flex-end;gap:2px;height:26px;margin:8px 0 2px}
+.spark i{flex:1;min-height:2px;border-radius:2px 2px 1px 1px;background:linear-gradient(180deg,#34d399,#0ea5e9);transform-origin:bottom;animation:sparkGrow .8s cubic-bezier(.2,.75,.25,1) both}
+@keyframes sparkGrow{from{transform:scaleY(.05)}to{transform:scaleY(1)}}
+.card-note{font-size:.72rem;color:var(--muted);margin:2px 0 6px}
+@media (prefers-reduced-motion:reduce){.spark i{animation:none}}
 """
 
 
@@ -821,7 +828,7 @@ def main() -> int:
         shutil.rmtree(out)
     out.mkdir(parents=True)
     urls: list[str] = []
-    current_year = date.today().year
+    current_year = date.today().year if date.today().year in YEARS else max(YEARS)
 
     data: dict[tuple[str, int], dict] = {}
     for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
@@ -886,11 +893,19 @@ def main() -> int:
             continue
         current = data.get((code, current_year)) or entry
         nxt = [c for c in current["closures"] if c["date"] >= date.today().isoformat()]
-        next_txt = (f'next closure {nxt[0]["date"]}' if nxt else "no more closures this year")
+        if nxt:
+            next_txt = "next " + date.fromisoformat(nxt[0]["date"]).strftime("%d %b")
+        else:
+            next_txt = "no more this year"
+        _mon = [current["monthly"][i] if i < len(current["monthly"]) else 0 for i in range(1, 13)]
+        _mx = max(_mon) or 1
+        spark = "".join(f'<i style="height:{max(6, v / _mx * 100):.0f}%"></i>' for v in _mon)
         cards.append(
             f'<a class="card" href="{slug_for(short)}/index.html" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" data-live-market>'
             f'<div class="flag">{flag_emoji(cc)}</div><h3>{short}</h3>'
             f'<p>{current["tradingDays"]} trading days in {current_year}</p>'
+            f'<span class="spark" aria-hidden="true">{spark}</span>'
+            f'<p class="card-note">{len(current["closures"])} market holidays · {next_txt}</p>'
             f'<p class="status"><span class="dot"></span><span data-live-label>{city}</span></p></a>'
         )
     map_markers = []
@@ -944,7 +959,8 @@ def main() -> int:
         "monthly breakdowns, one-click .ics subscriptions and a free JSON API.</p></section>"
         + map_section
         + '<section class="sec"><h2 data-i18n="ex.h2">Exchanges</h2>'
-        '<p class="sub" data-i18n="ex.sub">Trading days and the next closure for this year.</p>'
+        '<p class="sub" data-i18n="ex.sub">Trading days and the next closure for '
+        + str(current_year) + ".</p>"
         '<div class="grid">' + "".join(cards) + "</div></section>"
         '<section class="ad">[Ad slot]</section>'
         '<section class="sec" id="closures"><h2>Why this matters</h2>'
@@ -957,7 +973,8 @@ def main() -> int:
     (out / "index.html").write_text(
         page("Market Holidays & Trading Days — ExchangeKit",
              "Trading days and market holidays for NYSE, NASDAQ, SSE, HKEX, TSE, LSE, Xetra and 25 more exchanges. Free .ics and JSON API.",
-             site_url + "/", body, script="<script>" + MAP_JS + "</script>"),
+             site_url + "/", body,
+             script="<script>window.EX_FOCUS_YEAR=" + str(current_year) + ";</script><script>" + MAP_JS + "</script>"),
         encoding="utf-8",
     )
     urls.append("")
