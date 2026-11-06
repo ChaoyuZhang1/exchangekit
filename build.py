@@ -175,6 +175,15 @@ MOTION_JS = """
     }
     update(); setInterval(update, 30000);
   });
+  var ua = navigator.userAgent || '';
+  var isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && /Safari/.test(ua));
+  var isAndroid = /Android/i.test(ua);
+  document.body.className += (isAndroid ? ' is-android' : (isIOS ? ' is-ios' : ' is-desktop'));
+  document.querySelectorAll('.sub-help details').forEach(function(d){
+    var t = (d.querySelector('summary') || {}).textContent || '';
+    var match = (isAndroid && t.indexOf('Android') >= 0) || (isIOS && (t.indexOf('iPhone') >= 0 || t.indexOf('Mac') >= 0));
+    d.open = match;
+  });
   document.querySelectorAll('[data-copy]').forEach(function(btn){
     btn.addEventListener('click', function(){
       var text = btn.getAttribute('data-copy');
@@ -255,18 +264,23 @@ def subscribe_block(short: str, slug: str, year: int, site_url: str) -> str:
         '<p class="sub">One URL — auto-updating calendar. Works with iOS, macOS, Google Calendar and Outlook; '
         "no .ics file import needed.</p>"
         '<div class="sub-actions">'
-        f'<a class="btn" href="{wc}">📱 Subscribe on iPhone / Mac</a>'
+        f'<a class="btn" href="{wc}">📱 iOS / macOS — one-tap subscribe</a>'
         f'<a class="btn ghost" href="{google_cal_url(ics)}" target="_blank" rel="noopener">Add to Google Calendar</a>'
+        '<a class="btn ghost" href="https://calendar.google.com/calendar/r/settings/addbyurl" '
+        'target="_blank" rel="noopener">Android — Add by URL</a>'
         f'<a class="btn ghost" href="{outlook_cal_url(ics)}" target="_blank" rel="noopener">Add to Outlook</a>'
         f'<button type="button" class="btn ghost" data-copy="{ics}">Copy .ics link</button>'
         "</div>"
         '<div class="sub-help">'
         "<details open><summary>iPhone / iPad / Mac — subscribe (auto-updates)</summary><ol>"
-        "<li>Tap <strong>Subscribe on iPhone / Mac</strong> → Calendar opens → tap <strong>Subscribe</strong>.</li>"
+        "<li>Tap <strong>iOS / macOS — one-tap subscribe</strong> → Calendar opens → tap <strong>Subscribe</strong>.</li>"
         "<li>Or Settings → Calendar → Accounts → Add Account → Other → <strong>Add Subscribed Calendar</strong>, "
         f"paste <code>{ics}</code>.</li></ol></details>"
-        "<details><summary>Android (Google Calendar)</summary><ol>"
-        "<li>Google Calendar → Other calendars → “+” → From URL → paste the .ics link.</li></ol></details>"
+        "<details><summary>Android — Google Calendar can't open webcal links; use one of these</summary><ol>"
+        "<li>Browser → <a href=\"https://calendar.google.com/calendar/r/settings/addbyurl\" target=\"_blank\" "
+        'rel="noopener">Google Calendar → Add calendar → From URL</a> → paste the .ics URL.</li>'
+        "<li>Or install <strong>ICSx5</strong> to sync the .ics subscription into the Android system calendar.</li>"
+        "<li>Samsung Calendar: Settings → Add calendar → Subscribe → paste URL.</li></ol></details>"
         "<details><summary>Outlook / Windows</summary><ol>"
         "<li>Outlook → Calendar → Add calendar → Subscribe from web → paste the .ics link.</li></ol></details>"
         "</div>"
