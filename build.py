@@ -119,6 +119,8 @@ a{color:var(--accent);text-decoration:none;transition:color .15s}a:hover{text-de
 nav{display:flex;gap:22px}nav a{color:var(--ink-soft);font-size:.9rem;font-weight:500;position:relative}
 nav a::after{content:"";position:absolute;left:0;right:100%;bottom:-6px;height:2px;background:var(--accent);transition:right .25s var(--ease)}
 nav a:hover::after{right:0}
+.lang-select{border:1px solid var(--line);background:var(--surface);color:var(--ink-soft);border-radius:9px;padding:4px 8px;font-size:.8rem;margin-left:16px}
+@media(max-width:640px){nav{flex-wrap:wrap;gap:10px}.lang-select{margin-left:0}}
 .hero{padding:64px 0 12px;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-60% -10% auto -10%;height:140%;background:radial-gradient(620px 320px at 18% 8%,rgba(15,107,92,.10),transparent 62%),radial-gradient(520px 280px at 88% 0%,rgba(181,115,26,.10),transparent 60%);pointer-events:none}
 .hero>*{position:relative}
@@ -178,6 +180,87 @@ tbody tr:hover{background:#faf7f0}
 .sub-help code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:.82rem;word-break:break-all}
 """
 
+I18N_JS = """
+(function(){
+  var D={
+    en:{'nav.ex':'Exchanges','nav.map':'Live map','nav.hol':'Holidays','nav.api':'API','nav.about':'About',
+      'hero.eyebrow':'Trading days · market holidays · 2025–2028','hero.h1':'Market holidays and trading days.',
+      'hero.lede':'Every closure day for the world\\'s major stock exchanges, with trading-day counts, monthly breakdowns, one-click .ics subscriptions and a free JSON API.',
+      'map.h2':'Market map — live open / closed','map.sub':'Every exchange on one interactive map. Green pulsing dots are markets open right now; we locate you automatically. Drag to pan, scroll to zoom.',
+      'map.open':'Open now','map.closed':'Closed','map.you':'You','map.badge':'{n} / {m} markets open now',
+      'ex.h2':'Exchanges','ex.sub':'Trading days and the next closure for {year}.',
+      'foot.note':'Schedules derived from pandas-market-calendars exchange rules; holiday names joined from open holiday data.'},
+    zh:{'nav.ex':'交易所','nav.map':'实时地图','nav.hol':'休市日','nav.api':'API','nav.about':'关于',
+      'hero.eyebrow':'交易日 · 休市日 · 2025–2028','hero.h1':'全球交易所休市与交易日',
+      'hero.lede':'全球主要交易所的每个休市日，附交易日数量、月度分布、一键 .ics 订阅与免费 JSON API。',
+      'map.h2':'交易所地图 —— 实时开市/闭市','map.sub':'所有交易所尽在交互地图上。绿色脉冲点是当前正在开市的市场；我们会自动定位你。拖拽平移，滚轮缩放。',
+      'map.open':'开市中','map.closed':'已闭市','map.you':'你','map.badge':'{n} / {m} 个市场正在开市',
+      'ex.h2':'交易所','ex.sub':'{year} 年交易日与下一次休市。',
+      'foot.note':'交易所日历基于 pandas-market-calendars；休市名称来自公开假期数据。'},
+    ja:{'nav.ex':'取引所','nav.map':'ライブマップ','nav.hol':'休場日','nav.api':'API','nav.about':'概要',
+      'hero.eyebrow':'取引日 · 休場日 · 2025–2028','hero.h1':'市場の休場日と取引日',
+      'hero.lede':'世界の主要取引所の休場日を、取引日数・月別内訳・.ics購読・無料JSON API付きで。',
+      'map.h2':'市場マップ — リアルタイム開場/閉場','map.sub':'すべての取引所を1つのインタラクティブマップに。緑の点は現在開場中。現在地を自動検出します。ドラッグで移動、スクロールでズーム。',
+      'map.open':'開場中','map.closed':'閉場','map.you':'あなた','map.badge':'{n} / {m} 市場が開場中',
+      'ex.h2':'取引所','ex.sub':'{year}年の取引日と次の休場日。',
+      'foot.note':'取引所カレンダーは pandas-market-calendars に基づきます。'},
+    ko:{'nav.ex':'거래소','nav.map':'실시간 지도','nav.hol':'휴장일','nav.api':'API','nav.about':'소개',
+      'hero.eyebrow':'거래일 · 휴장일 · 2025–2028','hero.h1':'시장 휴장일과 거래일',
+      'hero.lede':'세계 주요 거래소의 모든 휴장일, 거래일 수·월별 분포·.ics 구독·무료 JSON API 포함.',
+      'map.h2':'시장 지도 — 실시간 개장/폐장','map.sub':'모든 거래소를 하나의 인터랙티브 지도에. 초록 점은 현재 개장 중인 시장입니다. 위치를 자동 감지합니다. 드래그로 이동, 스크롤로 확대.',
+      'map.open':'개장 중','map.closed':'폐장','map.you':'나','map.badge':'{n} / {m} 시장 개장 중',
+      'ex.h2':'거래소','ex.sub':'{year}년 거래일과 다음 휴장일.',
+      'foot.note':'거래소 일정은 pandas-market-calendars 기반입니다.'},
+    es:{'nav.ex':'Bolsas','nav.map':'Mapa en vivo','nav.hol':'Festivos','nav.api':'API','nav.about':'Acerca de',
+      'hero.eyebrow':'Días de cotización · festivos · 2025–2028','hero.h1':'Festivos y días de cotización',
+      'hero.lede':'Cada cierre de las principales bolsas, con días de cotización, desglose mensual, suscripción .ics y API JSON gratuita.',
+      'map.h2':'Mapa de mercados — abierto / cerrado en vivo','map.sub':'Todas las bolsas en un mapa interactivo. Los puntos verdes son mercados abiertos ahora; te localizamos automáticamente. Arrastra para mover, rueda para zoom.',
+      'map.open':'Abierto','map.closed':'Cerrado','map.you':'Tú','map.badge':'{n} / {m} mercados abiertos',
+      'ex.h2':'Bolsas','ex.sub':'Días de cotización y próximo cierre en {year}.',
+      'foot.note':'Calendarios basados en pandas-market-calendars.'},
+    fr:{'nav.ex':'Bourses','nav.map':'Carte live','nav.hol':'Fériés','nav.api':'API','nav.about':'À propos',
+      'hero.eyebrow':'Jours de bourse · fériés · 2025–2028','hero.h1':'Jours fériés et jours de bourse',
+      'hero.lede':'Chaque fermeture des grandes bourses, avec jours de cotation, détail mensuel, abonnement .ics et API JSON gratuite.',
+      'map.h2':'Carte des marchés — ouvert / fermé en direct','map.sub':'Toutes les bourses sur une carte interactive. Les points verts sont ouverts ; nous vous localisons automatiquement. Glissez pour déplacer, molette pour zoomer.',
+      'map.open':'Ouvert','map.closed':'Fermé','map.you':'Vous','map.badge':'{n} / {m} marchés ouverts',
+      'ex.h2':'Bourses','ex.sub':'Jours de cotation et prochaine fermeture en {year}.',
+      'foot.note':'Calendriers basés sur pandas-market-calendars.'},
+    de:{'nav.ex':'Börsen','nav.map':'Live-Karte','nav.hol':'Feiertage','nav.api':'API','nav.about':'Über',
+      'hero.eyebrow':'Handelstage · Feiertage · 2025–2028','hero.h1':'Marktfeiertage und Handelstage',
+      'hero.lede':'Jeder Schließtag der großen Börsen, mit Handelstagen, Monatsübersicht, .ics-Abo und kostenloser JSON-API.',
+      'map.h2':'Marktkarte — live offen / geschlossen','map.sub':'Alle Börsen auf einer interaktiven Karte. Grüne Punkte sind jetzt offen; wir orten Sie automatisch. Ziehen zum Verschieben, Scrollen zum Zoomen.',
+      'map.open':'Offen','map.closed':'Geschlossen','map.you':'Sie','map.badge':'{n} / {m} Märkte offen',
+      'ex.h2':'Börsen','ex.sub':'Handelstage und nächste Schließung in {year}.',
+      'foot.note':'Kalender basieren auf pandas-market-calendars.'}
+  };
+  var CC_LANG={CN:'zh',TW:'zh',HK:'zh',SG:'zh',JP:'ja',KR:'ko',ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',FR:'fr',BE:'fr',CA:'fr',DE:'de',AT:'de',CH:'de'};
+  var lang='en';
+  try{ var saved=localStorage.getItem('ex_lang'); if(saved&&D[saved]) lang=saved; }catch(e){}
+  function detect(){ var n=(navigator.language||'en').toLowerCase(), b=n.split('-')[0]; return D[b]?b:'en'; }
+  function t(k){ var d=D[lang]||D.en; return d[k]||D.en[k]||k; }
+  function apply(){
+    document.documentElement.lang=lang;
+    document.querySelectorAll('[data-i18n]').forEach(function(el){ el.textContent=t(el.getAttribute('data-i18n')); });
+    document.querySelectorAll('[data-hk-lang]').forEach(function(s){ s.value=lang; });
+  }
+  function set(l){ if(!D[l]) return; lang=l; try{localStorage.setItem('ex_lang',l);}catch(e){} apply(); }
+  window.HKI18N={t:t,set:set,lang:function(){return lang;},apply:apply};
+  document.addEventListener('DOMContentLoaded',function(){
+    apply();
+    document.querySelectorAll('[data-hk-lang]').forEach(function(s){ s.addEventListener('change',function(){set(this.value);}); });
+    if(!localStorage.getItem('ex_lang')){
+      var auto=detect();
+      fetch('/geo').then(function(r){return r.ok?r.json():null;}).then(function(d){
+        var c=((d&&d.country)||'').toUpperCase();
+        var l=CC_LANG[c]||auto;
+        if(D[l]) set(l);
+      }).catch(function(){ if(auto!=='en') set(auto); });
+    }
+  });
+})();
+"""
+
+
 MAP_PATH = ""
 try:
     MAP_PATH = json.loads((ROOT / "data" / "world_land.json").read_text(encoding="utf-8")).get("path") or ""
@@ -189,13 +272,13 @@ MAP_CSS = """
 .map-wrap{position:relative;border:1px solid rgba(255,255,255,.08);border-radius:20px;overflow:hidden;background:radial-gradient(120% 90% at 30% 0%,#0e2b27 0%,#0a1420 55%,#060a11 100%);box-shadow:0 26px 70px rgba(10,16,24,.28)}
 #exmap{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
 #exmap.dragging{cursor:grabbing}
-.map-land{fill:#17332e;stroke:#26554c;stroke-width:.7;vector-effect:non-scaling-stroke}
+.map-land{fill:#1d4a42;stroke:#2f6f64;stroke-width:.7;vector-effect:non-scaling-stroke}
 .ex-dot{cursor:pointer}
-.ex-dot .core{fill:#8a8f9c;transition:fill .3s}
+.ex-dot .core{fill:#9aa3b2;transition:fill .3s;stroke:rgba(0,0,0,.35);stroke-width:.6}
 .ex-dot .ring{fill:none;stroke:transparent;transform-box:fill-box;transform-origin:center}
-.ex-dot.open .core{fill:#22c55e}
-.ex-dot.open .ring{stroke:#22c55e;animation:exping 1.9s ease-out infinite}
-.ex-dot.closed .core{fill:#ef4444}
+.ex-dot.open .core{fill:#34d399}
+.ex-dot.open .ring{stroke:#34d399;animation:exping 1.9s ease-out infinite}
+.ex-dot.closed .core{fill:#f87171}
 .ex-dot:hover .core{stroke:#fff;stroke-width:1.4}
 @keyframes exping{0%{transform:scale(.5);opacity:.85}75%{transform:scale(2.4);opacity:0}100%{opacity:0}}
 .you-dot .core{fill:#38bdf8}
@@ -244,14 +327,18 @@ MAP_JS = """
       if(s.open) openCount++;
     });
     var badge=document.getElementById('map-open-count');
-    if(badge) badge.textContent=openCount+' / '+markers.length+' markets open now';
+    if(badge){
+      var tpl=(window.HKI18N?window.HKI18N.t('map.badge'):'{n} / {m} markets open now');
+      badge.textContent=tpl.replace('{n}',openCount).replace('{m}',markers.length);
+    }
   }
   applyStatus(); setInterval(applyStatus,30000);
   function showTip(m,ev){
     var s=status(m);
+    var openTxt=(window.HKI18N?window.HKI18N.t(s.open?'map.open':'map.closed'):(s.open?'Open':'Closed'));
     tip.innerHTML='<strong>'+m.getAttribute('data-short')+'</strong> · '+m.getAttribute('data-city')+
-      '<br><span style="color:'+(s.open?'#22c55e':'#ef4444')+'">'+(s.open?'Open':'Closed')+
-      '</span> · local '+s.local;
+      '<br><span style="color:'+(s.open?'#34d399':'#f87171')+'">'+openTxt+
+      '</span> · '+s.local;
     tip.classList.add('on');
     var rect=svg.parentNode.getBoundingClientRect();
     tip.style.left=Math.max(70,Math.min(rect.width-70,ev.clientX-rect.left))+'px';
@@ -387,17 +474,21 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
-        f'<nav><a href="{base}index.html">Exchanges</a>'
-        f'<a href="{base}index.html#map">Live map</a>'
-        f'<a href="{base}index.html#closures">Holidays</a>'
-        f'<a href="{base}api/index.html">API</a>'
-        f'<a href="{base}about/index.html">About</a></nav>'
+        f'<nav><a href="{base}index.html" data-i18n="nav.ex">Exchanges</a>'
+        f'<a href="{base}index.html#map" data-i18n="nav.map">Live map</a>'
+        f'<a href="{base}index.html#closures" data-i18n="nav.hol">Holidays</a>'
+        f'<a href="{base}api/index.html" data-i18n="nav.api">API</a>'
+        f'<a href="{base}about/index.html" data-i18n="nav.about">About</a></nav>'
+        '<select class="lang-select" data-hk-lang aria-label="Language">'
+        '<option value="en">EN</option><option value="zh">中文</option><option value="ja">日本語</option>'
+        '<option value="ko">한국어</option><option value="es">ES</option><option value="fr">FR</option>'
+        '<option value="de">DE</option></select>'
         "</div></header>"
     )
     foot = (
         '<footer class="site-foot"><div class="wrap">'
         f'<p><strong>{SITE_NAME}</strong> — {SITE_TAGLINE}</p>'
-        '<p>Schedules derived from pandas-market-calendars exchange rules; holiday names joined from open holiday data. '
+        f'<p><span data-i18n="foot.note">Schedules derived from pandas-market-calendars exchange rules; holiday names joined from open holiday data.</span> '
         "For planning only — confirm with the exchange for critical dates.</p>"
         f'<p><a href="{base}privacy/index.html">Privacy</a> · <a href="{base}about/index.html">About</a> · '
         f'<a href="https://workdaykit.pages.dev">Business days calculator</a> · '
@@ -414,7 +505,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         f"<style>{CSS}{MAP_CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
-        f"<script>{MOTION_JS}</script>{script}</body></html>"
+        f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}</body></html>"
     )
 
 
@@ -598,12 +689,12 @@ def main() -> int:
             f'<g class="ex-dot" data-lat="{lat}" data-lon="{lon}" data-short="{short}" '
             f'data-city="{city}" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" '
             f'data-href="{slug_for(short)}/index.html">'
-            '<circle class="ring" r="9"></circle><circle class="core" r="3.6"></circle></g>'
+            '<circle class="ring" r="11"></circle><circle class="core" r="4.4"></circle></g>'
         )
     map_section = (
-        '<section class="sec" id="map"><h2>Market map — live open / closed</h2>'
-        '<p class="sub">Every exchange on one interactive map. Green pulsing dots are markets open right now; '
-        "we locate you automatically. Drag to pan, scroll to zoom."
+        '<section class="sec" id="map"><h2 data-i18n="map.h2">Market map — live open / closed</h2>'
+        '<p class="sub" data-i18n="map.sub">Every exchange on one interactive map. Green pulsing dots are markets open right now; '
+        "we locate you automatically. Drag to pan, scroll to zoom.</p>"
         '<span class="map-badge" id="map-open-count">loading…</span></p>'
         '<div class="map-wrap">'
         '<svg id="exmap" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid meet" role="img" '
@@ -618,8 +709,9 @@ def main() -> int:
         '<button type="button" data-map-reset aria-label="Reset view">⟲</button>'
         '<button type="button" data-map-locate aria-label="Locate me">◎</button>'
         "</div>"
-        '<div class="map-legend"><span><i class="lg open"></i>Open now</span>'
-        '<span><i class="lg closed"></i>Closed</span><span><i class="lg you"></i>You</span></div>'
+        '<div class="map-legend"><span><i class="lg open"></i><span data-i18n="map.open">Open now</span></span>'
+        '<span><i class="lg closed"></i><span data-i18n="map.closed">Closed</span></span>'
+        '<span><i class="lg you"></i><span data-i18n="map.you">You</span></span></div>'
         "</div></section>"
     )
 
@@ -633,13 +725,13 @@ def main() -> int:
     ]
     faq_html = "".join(f"<dt>{q}</dt><dd>{a}</dd>" for q, a in faq)
     body = (
-        '<section class="hero"><p class="eyebrow">Trading days · market holidays · 2025–2028</p>'
-        "<h1>Market holidays and trading days.</h1>"
-        '<p class="lede">Every closure day for the world\'s major stock exchanges, with trading-day counts, '
+        '<section class="hero"><p class="eyebrow" data-i18n="hero.eyebrow">Trading days · market holidays · 2025–2028</p>'
+        '<h1 data-i18n="hero.h1">Market holidays and trading days.</h1>'
+        '<p class="lede" data-i18n="hero.lede">Every closure day for the world\'s major stock exchanges, with trading-day counts, '
         "monthly breakdowns, one-click .ics subscriptions and a free JSON API.</p></section>"
         + map_section
-        + '<section class="sec"><h2>Exchanges</h2>'
-        '<p class="sub">Trading days and the next closure for ' + str(current_year) + '.</p>'
+        + '<section class="sec"><h2 data-i18n="ex.h2">Exchanges</h2>'
+        '<p class="sub" data-i18n="ex.sub">Trading days and the next closure for this year.</p>'
         '<div class="grid">' + "".join(cards) + "</div></section>"
         '<section class="ad">[Ad slot]</section>'
         '<section class="sec" id="closures"><h2>Why this matters</h2>'
@@ -652,7 +744,7 @@ def main() -> int:
     (out / "index.html").write_text(
         page("Market Holidays & Trading Days — ExchangeKit",
              "Trading days and market holidays for NYSE, NASDAQ, SSE, HKEX, TSE, LSE, Xetra and 25 more exchanges. Free .ics and JSON API.",
-             site_url + "/", body, script=MAP_JS),
+             site_url + "/", body, script="<script>" + MAP_JS + "</script>"),
         encoding="utf-8",
     )
     urls.append("")
