@@ -30,7 +30,8 @@ ROOT = Path(__file__).resolve().parent
 HK = ROOT.parent / "holiday-kit"
 sys.path.insert(0, str(HK / "scripts"))
 from build_site import (COUNTRY_NAMES, flag_emoji, slugify,  # noqa: E402
-                        deemoji, PAGE_SHARE_JS, SEARCH_CSS, SEARCH_JS)
+                        deemoji, PAGE_SHARE_JS, SEARCH_CSS, SEARCH_JS,
+                        support_strip, SUPPORT_CSS, hide_api, SHOW_API)
 
 SITE_NAME = "ExchangeKit"
 SITE_URL = "https://exchangekit.pages.dev"
@@ -983,14 +984,14 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<meta property="og:image:height" content="630">'
         '<meta name="twitter:card" content="summary_large_image">'
         f'<script type="application/ld+json">{_WEBSITE_LD}</script>'
-        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SEARCH_CSS}{CRUMB_CSS}</style></head><body>{nav}"
+        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SUPPORT_CSS}{SEARCH_CSS}{CRUMB_CSS}</style></head><body>{nav}"
         + _ex_crumb_head
         + f'<main class="wrap">{_ex_crumb_html}{body}</main>{foot}'
         + f'<script>window.HK_BASE="{base}";</script>'
         + f"<script>{SEARCH_JS}</script>"
         + f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
     )
-    return deemoji(html)
+    return hide_api(deemoji(html))
 
 
 FAVICON = (
@@ -1074,6 +1075,7 @@ def page_lang_home(lang: str, site_url: str) -> str:
         + extra_cta
         + "</div></section>"
         + '<p class="viz-note">Localized entry page — the tool itself switches language automatically.</p>'
+        + support_strip("../", "ExchangeKit")
     )
     return page(title=title, desc=lede, canonical=site_url + "/" + lang + "/", body=body,
                 base="../", lang=lang, alternates=hreflang_links(site_url))
@@ -1417,7 +1419,7 @@ def main() -> int:
     (out / "index.html").write_text(
         page("Market Holidays & Trading Days — ExchangeKit",
              "Trading days and market holidays for NYSE, NASDAQ, SSE, HKEX, TSE, LSE, Xetra and 25 more exchanges. Free .ics and JSON API.",
-             site_url + "/", body,
+             site_url + "/", body + support_strip("", "ExchangeKit"),
              script=("<script>window.EX_FOCUS_YEAR=" + str(current_year) + ";</script>"
                      "<script>window.EX_MARKETS=" + ex_markets_json + ";window.EX_CLOSURES=" + ex_closures_json + ";</script>"
                      "<script>" + MAP_JS + "</script><script>" + CLOCK_JS + "</script>"),
@@ -1645,10 +1647,11 @@ def main() -> int:
     )
     (out / "api" / "index.html").write_text(
         page("Exchange Calendar API — static JSON", "Free static JSON API for exchange trading days and market holidays.",
-             f"{site_url}/api/", api_body, base="../"),
+             f"{site_url}/api/", api_body, base="../", robots="noindex,follow"),
         encoding="utf-8",
     )
-    urls.append("api/")
+    if SHOW_API:
+        urls.append("api/")
 
     # subscribe hub
     sub_rows = []
@@ -1761,7 +1764,7 @@ def main() -> int:
                 search_entries.append({"t": f"{short} {y}", "s": f"{d_['tradingDays']} trading days · {len(d_['closures'])} closures",
                                        "u": f"/{slug_}/{y}/", "k": "year"})
     for _p, _t, _s in [
-        ("api/", "Free JSON API", "Trading days and market holidays"),
+        *([("api/", "Free JSON API", "Trading days and market holidays")] if SHOW_API else []),
         ("about/", "About", "Method and data sources"),
         ("support/", "Support", "Keep the project free"),
     ]:
