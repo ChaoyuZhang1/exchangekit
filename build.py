@@ -1668,6 +1668,7 @@ def main() -> int:
         sitemap.append(f"<url><loc>{site_url}/{path}</loc><lastmod>{today}</lastmod></url>")
     sitemap.append("</urlset>")
     (out / "sitemap.xml").write_text("\n".join(sitemap), encoding="utf-8")
+    (out / f"9c1f7a2b4d6e8f0a1b3c5d7e9f2a4b6c.txt").write_text("9c1f7a2b4d6e8f0a1b3c5d7e9f2a4b6c", encoding="utf-8")
 
     print(f"Built {len(urls)} pages / {len(EXCHANGES)} exchanges -> {out}")
     return 0
