@@ -926,7 +926,8 @@ def _crumb_block(crumbs, canonical: str, esc_fn=None) -> tuple:
 
 
 def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
-         robots: str = "index,follow", hol_href: str = "", crumbs: list | None = None) -> str:
+         robots: str = "index,follow", hol_href: str = "", crumbs: list | None = None,
+         lang: str = "en", alternates: str = "") -> str:
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
@@ -953,7 +954,8 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<a href="{base}support/index.html">♥ Support · 打赏</a> · '
         f'<a href="https://workdaykit.pages.dev">Business days calculator</a> · '
         f'<a href="https://holidaykit.pages.dev">Holiday calendars</a></p>'
-        "</div></footer>"
+        + lang_links(base)
+        + "</div></footer>"
     )
     _ex_crumb_html, _ex_crumb_ld = ("", "")
     if crumbs:
@@ -962,11 +964,12 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<script type="application/ld+json">{_ex_crumb_ld}</script>' if _ex_crumb_ld else ""
     )
     html = (
-        '<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        f'<!doctype html><html lang="{lang}"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f"<title>{title}</title>"
         f'<meta name="description" content="{desc}">'
         f'<link rel="canonical" href="{canonical}">'
+        f"{alternates}"
         f'<meta name="robots" content="{robots}">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         f'<meta property="og:type" content="website">'
@@ -994,6 +997,84 @@ FAVICON = (
     '<path d="M14 46V30M26 46V22M38 46V34M50 46V18" stroke="#faf9f6" stroke-width="4" stroke-linecap="round"/>'
     '<circle cx="50" cy="18" r="4" fill="#b5731a"/></svg>'
 )
+
+
+LANG_CODES = ["zh", "ja", "ko", "es", "fr", "de"]
+
+LANG_LABELS = {"en": "English", "zh": "中文", "ja": "日本語", "ko": "한국어",
+               "es": "Español", "fr": "Français", "de": "Deutsch"}
+
+LANG_TEXT = {
+    "zh": [
+        "全球交易所交易日与休市日",
+        "32 家交易所每个年份的交易日数量、休市日历、一键 .ics 订阅与免费 JSON API。",
+        "查看交易所",
+        "开市时钟"
+    ],
+    "ja": [
+        "世界の取引所の取引日数と休場日",
+        "32 の取引所の年間取引日数、休場カレンダー、.ics 購読、無料 JSON API。",
+        "取引所を見る",
+        "マーケット時計"
+    ],
+    "ko": [
+        "세계 거래소 거래일과 휴장일",
+        "32개 거래소의 연간 거래일 수, 휴장 일정, .ics 구독과 무료 JSON API.",
+        "거래소 보기",
+        "시장 시계"
+    ],
+    "es": [
+        "Días de negociación y festivos bursátiles",
+        "Días de negociación por año, calendario de cierres, .ics y API JSON gratis para 32 bolsas.",
+        "Ver bolsas",
+        "Reloj de mercados"
+    ],
+    "fr": [
+        "Jours de bourse et jours de fermeture",
+        "Jours de cotation par an, calendrier des fermetures, .ics et API JSON gratuite pour 32 bourses.",
+        "Voir les bourses",
+        "Horloge des marchés"
+    ],
+    "de": [
+        "Handelstage und Börsenfeiertage",
+        "Handelstage pro Jahr, Schließungskalender, .ics und kostenlose JSON-API für 32 Börsen.",
+        "Börsen ansehen",
+        "Marktuhr"
+    ]
+}
+
+
+def hreflang_links(site_url: str) -> str:
+    parts = ['<link rel="alternate" hreflang="en" href="' + site_url + '/">']
+    for code in LANG_CODES:
+        parts.append('<link rel="alternate" hreflang="' + code + '" href="' + site_url + '/' + code + '/">')
+    parts.append('<link rel="alternate" hreflang="x-default" href="' + site_url + '/">')
+    return "".join(parts)
+
+
+def lang_links(base: str) -> str:
+    items = ['<a href="' + base + 'index.html">English</a>']
+    for code in LANG_CODES:
+        items.append('<a href="' + base + code + '/index.html">' + LANG_LABELS[code] + "</a>")
+    return '<p class="lang-links">' + " · ".join(items) + "</p>"
+
+
+def page_lang_home(lang: str, site_url: str) -> str:
+    t = LANG_TEXT[lang]
+    title, lede, cta1, cta2 = t[0], t[1], t[2], t[3]
+    extra_cta = ('<a class="btn ghost" href="../index.html#countries">' + t[4] + "</a>") if len(t) > 4 else ""
+    cta2_href = "../index.html#clock"
+    body = (
+        '<section class="hero"><p class="eyebrow">' + SITE_NAME + " · " + LANG_LABELS[lang] + "</p>"
+        + "<h1>" + title + "</h1><p class='lede'>" + lede + "</p>"
+        + '<div class="cta-row"><a class="btn" href="../index.html">' + cta1 + "</a>"
+        + '<a class="btn ghost" href="' + cta2_href + '">' + cta2 + "</a>"
+        + extra_cta
+        + "</div></section>"
+        + '<p class="viz-note">Localized entry page — the tool itself switches language automatically.</p>'
+    )
+    return page(title=title, desc=lede, canonical=site_url + "/" + lang + "/", body=body,
+                base="../", lang=lang, alternates=hreflang_links(site_url))
 
 
 def page_support(site_url: str) -> str:
@@ -1337,10 +1418,16 @@ def main() -> int:
              site_url + "/", body,
              script=("<script>window.EX_FOCUS_YEAR=" + str(current_year) + ";</script>"
                      "<script>window.EX_MARKETS=" + ex_markets_json + ";window.EX_CLOSURES=" + ex_closures_json + ";</script>"
-                     "<script>" + MAP_JS + "</script><script>" + CLOCK_JS + "</script>")),
+                     "<script>" + MAP_JS + "</script><script>" + CLOCK_JS + "</script>"),
+             alternates=hreflang_links(site_url)),
         encoding="utf-8",
     )
     urls.append("")
+    for _lang in LANG_CODES:
+        _ld = out / _lang
+        _ld.mkdir(parents=True, exist_ok=True)
+        (_ld / "index.html").write_text(page_lang_home(_lang, site_url), encoding="utf-8")
+        urls.append(_lang + "/")
 
     # exchange pages + year pages + ics + api
     for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
