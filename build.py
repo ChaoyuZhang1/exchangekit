@@ -249,35 +249,35 @@ I18N_JS = """
       'map.h2':'市場マップ — リアルタイム開場/閉場','map.sub':'すべての取引所を1つのインタラクティブマップに。緑の点は現在開場中。現在地を自動検出します。ドラッグで移動、スクロールでズーム。',
       'map.open':'開場中','map.closed':'閉場','map.you':'あなた','map.badge':'{n} / {m} 市場が開場中',
       'ex.h2':'取引所','ex.sub':'{year}年の取引日と次の休場日。',
-      'foot.note':'取引所カレンダーは pandas-market-calendars に基づきます。'},
+      'foot.note':'取引所の公式休場日に基づきます。重要な日付は取引所の発表でご確認ください。'},
     ko:{'nav.ex':'거래소','nav.map':'실시간 지도','nav.hol':'휴장일','nav.api':'API','nav.about':'소개',
       'hero.eyebrow':'거래일 · 휴장일 · 2025–2028','hero.h1':'시장 휴장일과 거래일',
       'hero.lede':'세계 주요 거래소의 모든 휴장일, 거래일 수·월별 분포·.ics 구독·무료 JSON API 포함.',
       'map.h2':'시장 지도 — 실시간 개장/폐장','map.sub':'모든 거래소를 하나의 인터랙티브 지도에. 초록 점은 현재 개장 중인 시장입니다. 위치를 자동 감지합니다. 드래그로 이동, 스크롤로 확대.',
       'map.open':'개장 중','map.closed':'폐장','map.you':'나','map.badge':'{n} / {m} 시장 개장 중',
       'ex.h2':'거래소','ex.sub':'{year}년 거래일과 다음 휴장일.',
-      'foot.note':'거래소 일정은 pandas-market-calendars 기반입니다.'},
+      'foot.note':'거래소의 공식 휴장일 기준입니다. 중요한 날짜는 거래소 공지로 확인하세요.'},
     es:{'nav.ex':'Bolsas','nav.map':'Mapa en vivo','nav.hol':'Festivos','nav.api':'API','nav.about':'Acerca de',
       'hero.eyebrow':'Días de cotización · festivos · 2025–2028','hero.h1':'Festivos y días de cotización',
       'hero.lede':'Cada cierre de las principales bolsas, con días de cotización, desglose mensual, suscripción .ics y API JSON gratuita.',
       'map.h2':'Mapa de mercados — abierto / cerrado en vivo','map.sub':'Todas las bolsas en un mapa interactivo. Los puntos verdes son mercados abiertos ahora; te localizamos automáticamente. Arrastra para mover, rueda para zoom.',
       'map.open':'Abierto','map.closed':'Cerrado','map.you':'Tú','map.badge':'{n} / {m} mercados abiertos',
       'ex.h2':'Bolsas','ex.sub':'Días de cotización y próximo cierre en {year}.',
-      'foot.note':'Calendarios basados en pandas-market-calendars.'},
+      'foot.note':'Basados en el calendario oficial de cada bolsa. Confirma las fechas críticas con la bolsa.'},
     fr:{'nav.ex':'Bourses','nav.map':'Carte live','nav.hol':'Fériés','nav.api':'API','nav.about':'À propos',
       'hero.eyebrow':'Jours de bourse · fériés · 2025–2028','hero.h1':'Jours fériés et jours de bourse',
       'hero.lede':'Chaque fermeture des grandes bourses, avec jours de cotation, détail mensuel, abonnement .ics et API JSON gratuite.',
       'map.h2':'Carte des marchés — ouvert / fermé en direct','map.sub':'Toutes les bourses sur une carte interactive. Les points verts sont ouverts ; nous vous localisons automatiquement. Glissez pour déplacer, molette pour zoomer.',
       'map.open':'Ouvert','map.closed':'Fermé','map.you':'Vous','map.badge':'{n} / {m} marchés ouverts',
       'ex.h2':'Bourses','ex.sub':'Jours de cotation et prochaine fermeture en {year}.',
-      'foot.note':'Calendriers basés sur pandas-market-calendars.'},
+      'foot.note':'Basés sur le calendrier officiel de chaque bourse. Vérifiez les dates critiques auprès de la bourse.'},
     de:{'nav.ex':'Börsen','nav.map':'Live-Karte','nav.hol':'Feiertage','nav.api':'API','nav.about':'Über',
       'hero.eyebrow':'Handelstage · Feiertage · 2025–2028','hero.h1':'Marktfeiertage und Handelstage',
       'hero.lede':'Jeder Schließtag der großen Börsen, mit Handelstagen, Monatsübersicht, .ics-Abo und kostenloser JSON-API.',
       'map.h2':'Marktkarte — live offen / geschlossen','map.sub':'Alle Börsen auf einer interaktiven Karte. Grüne Punkte sind jetzt offen; wir orten Sie automatisch. Ziehen zum Verschieben, Scrollen zum Zoomen.',
       'map.open':'Offen','map.closed':'Geschlossen','map.you':'Sie','map.badge':'{n} / {m} Märkte offen',
       'ex.h2':'Börsen','ex.sub':'Handelstage und nächste Schließung in {year}.',
-      'foot.note':'Kalender basieren auf pandas-market-calendars.'}
+      'foot.note':'Basierend auf dem offiziellen Handelskalender der jeweiligen Börse. Kritische Termine bitte bei der Börse prüfen.'}
   };
   var CC_LANG={CN:'zh',TW:'zh',HK:'zh',SG:'zh',JP:'ja',KR:'ko',ES:'es',MX:'es',AR:'es',CO:'es',CL:'es',PE:'es',FR:'fr',BE:'fr',CA:'fr',DE:'de',AT:'de',CH:'de'};
   var lang='en';
@@ -876,7 +876,6 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
         f'<nav><a href="{base}index.html" data-i18n="nav.ex">Exchanges</a>'
         f'<a href="{base}index.html#map" data-i18n="nav.map">Live map</a>'
-        f'<a href="{hol_href or (base + "index.html#closures")}" data-i18n="nav.hol">Holidays</a>'
         f'<a href="{base}api/index.html" data-i18n="nav.api">API</a>'
         f'<a href="{base}about/index.html" data-i18n="nav.about">About</a></nav>'
         '<select class="lang-select" data-hk-lang aria-label="Language">'
@@ -888,7 +887,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
     foot = (
         '<footer class="site-foot"><div class="wrap">'
         f'<p><strong>{SITE_NAME}</strong> — {SITE_TAGLINE}</p>'
-        f'<p><span data-i18n="foot.note">Schedules derived from pandas-market-calendars exchange rules; holiday names joined from open holiday data.</span> '
+        f'<p><span data-i18n="foot.note">Schedules follow the official holiday calendar of each exchange.</span> '
         "For planning only — confirm with the exchange for critical dates.</p>"
         f'<p><a href="{base}privacy/index.html">Privacy</a> · <a href="{base}about/index.html">About</a> · '
         f'<a href="{base}support/index.html">♥ Support · 打赏</a> · '
@@ -1211,7 +1210,7 @@ def main() -> int:
         ("What counts as a market holiday?",
          "A weekday on which the exchange is closed. Weekends are always non-trading days and are not listed."),
         ("Where does the data come from?",
-         "Exchange holiday rules are computed with pandas-market-calendars; names are joined from open public-holiday datasets."),
+         "Holiday rules follow the official published calendar of each exchange; holiday names come from open public-holiday datasets."),
         ("Can I subscribe to an exchange calendar?",
          "Yes — every exchange page has .ics links for Google Calendar, Apple Calendar and Outlook."),
     ]
@@ -1550,7 +1549,7 @@ def main() -> int:
         body_p = (
             f'<section class="hero"><h1>{title.split(" — ")[0]}</h1>'
             f'<p class="lede">{desc}</p></section>'
-            '<section class="sec"><p>Exchange holiday rules from pandas-market-calendars. '
+            '<section class="sec"><p>Holiday rules follow the official published calendar of each exchange. '
             "Holiday names from open public-holiday datasets. Data for planning only — "
             "always confirm critical dates with the exchange.</p></section>"
         )
