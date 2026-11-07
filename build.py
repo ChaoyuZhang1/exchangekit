@@ -896,8 +896,37 @@ SHARE_JS = r"""
 """
 
 
+CRUMB_CSS = """
+.crumbs{font-size:.78rem;color:var(--muted);margin:2px 0 18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--muted);text-decoration:none;border-bottom:1px solid transparent}
+.crumbs a:hover{color:var(--ink);border-bottom-color:currentColor}
+.crumbs span[aria-current]{color:var(--ink);font-weight:600}
+.crumbs .sep{opacity:.45}
+"""
+
+
+def _crumb_block(crumbs, canonical: str, esc_fn=None) -> tuple:
+    """Return (visible html, ld json string) for a breadcrumb trail."""
+    import json as _json
+    from urllib.parse import urljoin as _urljoin
+    esc_ = esc_fn or (lambda s: s)
+    items, parts = [], []
+    for i, (label, href) in enumerate(crumbs, start=1):
+        item = {"@type": "ListItem", "position": i, "name": label}
+        if href:
+            item["item"] = _urljoin(canonical, href)
+            parts.append(f'<a href="{href}">{esc_(label)}</a>')
+        else:
+            parts.append(f'<span aria-current="page">{esc_(label)}</span>')
+        items.append(item)
+    html = '<nav class="crumbs" aria-label="Breadcrumb">' + '<span class="sep">›</span>'.join(parts) + "</nav>"
+    ld = _json.dumps({"@context": "https://schema.org", "@type": "BreadcrumbList",
+                      "itemListElement": items}, ensure_ascii=False)
+    return html, ld
+
+
 def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
-         robots: str = "index,follow", hol_href: str = "") -> str:
+         robots: str = "index,follow", hol_href: str = "", crumbs: list | None = None) -> str:
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
@@ -926,6 +955,12 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<a href="https://holidaykit.pages.dev">Holiday calendars</a></p>'
         "</div></footer>"
     )
+    _ex_crumb_html, _ex_crumb_ld = ("", "")
+    if crumbs:
+        _ex_crumb_html, _ex_crumb_ld = _crumb_block(crumbs, canonical)
+    _ex_crumb_head = (
+        f'<script type="application/ld+json">{_ex_crumb_ld}</script>' if _ex_crumb_ld else ""
+    )
     html = (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
@@ -943,11 +978,12 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<meta property="og:image:height" content="630">'
         '<meta name="twitter:card" content="summary_large_image">'
         f'<script type="application/ld+json">{_WEBSITE_LD}</script>'
-        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SEARCH_CSS}</style></head><body>{nav}"
-        f'<main class="wrap">{body}</main>{foot}'
-        f'<script>window.HK_BASE="{base}";</script>'
-        f"<script>{SEARCH_JS}</script>"
-        f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
+        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SEARCH_CSS}{CRUMB_CSS}</style></head><body>{nav}"
+        + _ex_crumb_head
+        + f'<main class="wrap">{_ex_crumb_html}{body}</main>{foot}'
+        + f'<script>window.HK_BASE="{base}";</script>'
+        + f"<script>{SEARCH_JS}</script>"
+        + f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
     )
     return deemoji(html)
 
@@ -1337,6 +1373,7 @@ def main() -> int:
                  + subscribe_block(short, slug, YEARS[1] if (code, YEARS[1]) in data else YEARS[0], site_url)
                  + f'<p><a href="../index.html">← All exchanges</a></p>',
                  base="../../", hol_href="#holidays",
+                 crumbs=[("Home", "../../index.html"), ("Exchanges", "../../index.html#closures"), (short, "")],
                  script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"),
             encoding="utf-8",
         )
@@ -1439,6 +1476,8 @@ def main() -> int:
                      + rel_html
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
                      base="../../../", hol_href="#holidays",
+                     crumbs=[("Home", "../../../index.html"), ("Exchanges", "../../../index.html#closures"),
+                             (short, "../../index.html"), (str(y), "")],
                      script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"
                      "<script>window.EX_SHARE="
                      + json.dumps({
@@ -1660,6 +1699,22 @@ def main() -> int:
         (out / "assets" / "support").mkdir(parents=True, exist_ok=True)
         for p in support_dir.glob("*.png"):
             (out / "assets" / "support" / p.name).write_bytes(p.read_bytes())
+    _404 = (
+        '<section class="hero"><p class="eyebrow">404</p>'
+        "<h1>This market is closed — permanently.</h1>"
+        '<p class="lede">The page you asked for does not exist. Search an exchange (⌘K), or start from '
+        "the live market clock.</p>"
+        '<div class="cta-row"><a class="btn" href="/index.html#clock">Market clock</a>'
+        '<a class="btn ghost" href="/index.html#closures">All exchanges</a>'
+        '<a class="btn ghost" href="/api/index.html">JSON API</a></div></section>'
+    )
+    (out / "404.html").write_text(
+        page("Page not found — " + SITE_NAME,
+             "This page does not exist. Browse exchanges, the live market clock, or the JSON API.",
+             site_url + "/404.html", _404, base="/", robots="noindex,follow"),
+        encoding="utf-8",
+    )
+
     (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {site_url}/sitemap.xml\n", encoding="utf-8")
     sitemap = ['<?xml version="1.0" encoding="UTF-8"?>',
                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
