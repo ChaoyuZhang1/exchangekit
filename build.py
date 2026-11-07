@@ -172,6 +172,41 @@ tbody tr:hover{background:#faf7f0}
 .ad{border:1px dashed #d8d3c7;background:#f7f4ee;color:#9a958a;border-radius:14px;padding:18px;min-height:90px;display:grid;place-items:center;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;margin:28px 0}
 .callout{border-left:3px solid var(--amber);background:#fdf6e9;padding:12px 16px;border-radius:10px;font-size:.9rem;margin:16px 0}
 .faq dt{font-weight:650;margin-top:14px}.faq dd{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.clock-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:10px}
+.clock-head .sub{margin:4px 0 0}
+.clock-badge{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;white-space:nowrap}
+.clock-badge b{font-variant-numeric:tabular-nums}
+.clock-wrap{display:grid;grid-template-columns:1.45fr .55fr;gap:22px;align-items:start;margin-top:14px}
+.mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:12px}
+.mk-card{display:block;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:13px 14px;position:relative;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s;color:var(--ink)}
+.mk-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 12px 26px -18px rgba(15,17,21,.35)}
+.mk-card.is-open{border-color:rgba(26,155,99,.45)}
+.mk-card.is-open:before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 100% 0%,rgba(52,211,153,.16),transparent 62%)}
+.mk-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.mk-code{font-weight:700;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
+.mk-city{font-size:.71rem;color:var(--muted);margin-top:2px}
+.mk-state{display:inline-flex;align-items:center;gap:5px;font-size:.63rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.mk-state.open{background:#e7f7ef;color:#0e7a4d}
+.mk-state .dot{width:6px;height:6px}
+.mk-time{font:700 1.3rem/1.15 ui-monospace,SFMono-Regular,Menlo,monospace;margin:10px 0 1px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.mk-sub{font-size:.71rem;color:var(--muted);min-height:1.05em}
+.mk-prog{height:5px;border-radius:999px;background:var(--soft);overflow:hidden;margin-top:9px}
+.mk-prog i{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,var(--accent),#2f9d8a);transition:width .55s linear}
+.mk-card:not(.is-open) .mk-prog i{background:linear-gradient(90deg,#d9d2c4,#b9ad99)}
+.mk-side{display:grid;gap:14px;position:sticky;top:78px}
+.mk-panel{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 15px}
+.mk-panel h3{margin:0 0 10px;font-size:.9rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mk-panel h3 span{font-size:.64rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.mk-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.mk-item{display:grid;grid-template-columns:46px minmax(0,1fr) auto auto;gap:9px;align-items:center;font-size:.79rem;padding:7px 9px;border-radius:9px;background:var(--soft)}
+.mk-item b{font-variant-numeric:tabular-nums;font-size:.77rem}
+.mk-item .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.mk-item .tm{color:var(--muted);font-size:.7rem;font-weight:400;text-align:right}
+.mk-empty{font-size:.79rem;color:var(--muted);margin:2px 0 0}
+.clock-note{font-size:.78rem;color:var(--muted);margin-top:12px}
+.live-count{color:var(--muted);font-size:.88rem}
+@media(max-width:900px){.clock-wrap{grid-template-columns:1fr}.mk-side{position:static;grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.mk-side{grid-template-columns:1fr}.mk-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}.mk-time{font-size:1.15rem}}
 .site-foot{border-top:1px solid var(--line);margin-top:60px;padding:28px 0 44px;font-size:.84rem;color:var(--muted)}
 .muted{color:var(--muted)}
 @media(max-width:640px){nav{gap:12px}nav a{font-size:.8rem}.head-inner{height:auto;min-height:56px;flex-wrap:wrap;padding:8px 0}.hero{padding-top:40px}}
@@ -194,6 +229,9 @@ I18N_JS = """
       'map.h2':'Market map — live open / closed','map.sub':'Every exchange on one interactive map. Green pulsing dots are markets open right now; we locate you automatically. Drag to pan, scroll to zoom.',
       'map.open':'Open now','map.closed':'Closed','map.you':'You','map.badge':'{n} / {m} markets open now',
       'ex.h2':'Exchanges','ex.sub':'Trading days and the next closure for {year}.',
+      'clock.h2':'Market clock — live open / closed','clock.sub':'Live countdown to every open and close. Green cards are trading right now.',
+      'clock.closing':'Closing soon','clock.opening':'Opening soon',
+      'clock.note':'Times are each market’s local time. Exchange holidays are skipped automatically.','clock.live':'live',
       'foot.note':'Calendar dates follow each exchange’s official holiday schedule. Always confirm critical dates with the exchange.'},
     zh:{'nav.ex':'交易所','nav.map':'实时地图','nav.hol':'休市日','nav.api':'API','nav.about':'关于',
       'hero.eyebrow':'交易日 · 休市日 · 2025–2028','hero.h1':'全球交易所休市与交易日',
@@ -201,6 +239,9 @@ I18N_JS = """
       'map.h2':'交易所地图 —— 实时开市/闭市','map.sub':'所有交易所尽在交互地图上。绿色脉冲点是当前正在开市的市场；我们会自动定位你。拖拽平移，滚轮缩放。',
       'map.open':'开市中','map.closed':'已闭市','map.you':'你','map.badge':'{n} / {m} 个市场正在开市',
       'ex.h2':'交易所','ex.sub':'{year} 年交易日与下一次休市。',
+      'clock.h2':'交易所时钟 —— 实时开市/休市','clock.sub':'每个市场的开市、收市倒计时；绿色卡片为正在交易。',
+      'clock.closing':'即将收盘','clock.opening':'即将开市',
+      'clock.note':'时间均为交易所当地时间，已自动跳过交易所假期。','clock.live':'实时',
       'foot.note':'日期依据各交易所官方休市安排，重要日期请以交易所公告为准。'},
     ja:{'nav.ex':'取引所','nav.map':'ライブマップ','nav.hol':'休場日','nav.api':'API','nav.about':'概要',
       'hero.eyebrow':'取引日 · 休場日 · 2025–2028','hero.h1':'市場の休場日と取引日',
@@ -264,6 +305,116 @@ I18N_JS = """
       }).catch(function(){ if(auto!=='en') set(auto); });
     }
   });
+})();
+"""
+
+
+CLOCK_JS = """
+(function(){
+  var M=window.EX_MARKETS||[]; if(!M.length) return;
+  var C=window.EX_CLOSURES||{};
+  var TT={
+    en:{open:'Open now',closed:'Closed',holiday:'Market holiday',closes:'closes in',opens:'opens in',
+        count:'{n} of {t} markets open now',local:'your local time',openAt:'opens',
+        none:'No markets open right now.',wait:'waiting for next session',openFor:'open for',
+        all:'Show all {t} markets',less:'Show fewer markets',hide:'show fewer'},
+    zh:{open:'开市中',closed:'已休市',holiday:'假期休市',closes:'距收盘',opens:'距开盘',
+        count:'{t} 个市场中 {n} 个正在开市',local:'你的本地时间',openAt:'开盘',
+        none:'当前没有开市的市场。',wait:'等待下一个交易时段',openFor:'已开市',
+        all:'展开全部 {t} 个市场',less:'收起市场列表',hide:'收起'}
+  };
+  var WD={
+    en:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],
+    zh:['周日','周一','周二','周三','周四','周五','周六'],
+    ja:['日','月','火','水','木','金','土'],
+    ko:['일','월','화','수','목','금','토']
+  };
+  function wdName(i){ var l=lang(); return (WD[l]||WD.en)[i]; }
+  function lang(){ try{ return (window.HKI18N&&window.HKI18N.lang&&window.HKI18N.lang())||(document.documentElement.lang||'en').slice(0,2); }catch(e){ return 'en'; } }
+  function t(){ return TT[lang()]||TT.en; }
+  function pad(n){ return (n<10?'0':'')+n; }
+  function clock(sec){ if(sec<0) sec=0; var d=Math.floor(sec/86400),h=Math.floor(sec%86400/3600),m=Math.floor(sec%3600/60),s=sec%60; return (d? d+'d '+pad(h)+':':'')+pad(m)+':'+pad(s); }
+  function short(sec){ if(sec<0) sec=0; if(sec<60) return '<1m'; if(sec<3600) return Math.round(sec/60)+'m'; var h=Math.floor(sec/3600),m=Math.round(sec%3600/60); return h+'h'+(m?' '+m+'m':''); }
+  var FMT={};
+  function parts(tz){
+    var f=FMT[tz]; if(!f){ f=FMT[tz]=new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}); }
+    var now=new Date(), p=f.formatToParts(now), m={}; p.forEach(function(x){ m[x.type]=x.value; });
+    var ds=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+    return {wd:m.weekday,hm:m.hour+':'+m.minute,min:(+m.hour)*60+ +m.minute,sec:+m.second,date:ds};
+  }
+  function isHol(code,iso){ var y=C[code]; if(!y) return false; var a=y[iso.slice(0,4)]; return !!a && a.indexOf(iso)>=0; }
+  function state(m,p){
+    var wk=(p.wd==='Sat'||p.wd==='Sun'), hol=isHol(m.code,p.date);
+    var om=(+m.open.split(':')[0])*60+ +m.open.split(':')[1], cm=(+m.close.split(':')[0])*60+ +m.close.split(':')[1];
+    var open=!wk && !hol && p.min>=om && p.min<cm;
+    var nextOpen=null, dow=null, days=0;
+    if(!open){
+      var base=new Date(Date.UTC(+p.date.slice(0,4),+p.date.slice(5,7)-1,+p.date.slice(8,10)));
+      for(var k=0;k<15&&nextOpen===null;k++){
+        var d=new Date(base.getTime()+k*86400000), wd=d.getUTCDay();
+        if(wd===0||wd===6) continue;
+        var iso=d.toISOString().slice(0,10);
+        if(isHol(m.code,iso)) continue;
+        if(k===0 && p.min>=om) continue;
+        nextOpen=(k*1440+om-p.min)*60-p.sec; dow=wd; days=k;
+      }
+    }
+    return {open:open,wk:wk,hol:hol,om:om,cm:cm,nextOpen:nextOpen,dow:dow,days:days,
+            elapsed: open ? (p.min-om)*60+p.sec : 0,
+            toClose: open ? (cm-p.min)*60-p.sec : null,
+            pct: open ? Math.min(100,Math.max(1.5,(p.min-om)/(cm-om)*100)) : 0};
+  }
+  function els(id){ return document.getElementById(id); }
+  var expanded=false, COLLAPSED=12;
+  function render(){
+    var host=els('ex-clock'); if(!host) return;
+    var T=t(), rows=M.map(function(m){ var p=parts(m.tz); return {m:m,p:p,s:state(m,p)}; });
+    var open=rows.filter(function(r){ return r.s.open; }).sort(function(a,b){ return a.s.toClose-b.s.toClose; });
+    var closed=rows.filter(function(r){ return !r.s.open; }).sort(function(a,b){ return (a.s.nextOpen===null?1e9:a.s.nextOpen)-(b.s.nextOpen===null?1e9:b.s.nextOpen); });
+    var badge=els('ex-clock-badge');
+    if(badge){
+      var now=new Date();
+      badge.innerHTML='<span class="dot '+(open.length?'open':'closed')+'"></span>'+
+        T.count.replace('{n}',open.length).replace('{t}',rows.length)+' · '+
+        now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' <span class="muted">'+T.local+'</span>';
+    }
+    var grid=els('ex-clock-grid');
+    if(grid){
+      var cards=open.concat(closed).map(function(r){
+        var st=r.s.open?T.open:(r.s.hol?T.holiday:T.closed);
+        var main=r.s.open?clock(r.s.toClose):(r.s.nextOpen===null?'—':clock(r.s.nextOpen));
+        var sub=r.s.open
+          ? (T.openFor+' '+short(r.s.elapsed)+' · '+T.closes+' '+short(r.s.toClose))
+          : (T.openAt+(r.s.days>0?' '+wdName(r.s.dow):'')+' '+r.m.open);
+        return '<a class="mk-card'+(r.s.open?' is-open':'')+'" href="'+r.m.slug+'/index.html">'+
+          '<div class="mk-top"><div><div class="mk-code">'+r.m.short+'</div><div class="mk-city">'+r.m.city+' · '+r.p.hm+'</div></div>'+
+          '<span class="mk-state'+(r.s.open?' open':'')+'"><span class="dot '+(r.s.open?'open':'closed')+'"></span>'+st+'</span></div>'+
+          '<div class="mk-time">'+main+'</div><div class="mk-sub">'+sub+'</div>'+
+          '<div class="mk-prog"><i style="width:'+r.s.pct.toFixed(1)+'%"></i></div></a>';
+      });
+      grid.innerHTML=(expanded? cards : cards.slice(0, COLLAPSED)).join('');
+      var more=els('ex-clock-more');
+      if(more){
+        more.style.display = cards.length>COLLAPSED ? '' : 'none';
+        more.textContent = expanded ? T.less : T.all.replace('{t}', cards.length);
+      }
+    }
+    var cl=els('ex-closing');
+    if(cl){ cl.innerHTML=open.slice(0,6).map(function(r){
+      return '<li class="mk-item"><b>'+r.m.short+'</b><span class="nm">'+r.m.city+'</span><span class="tm">'+r.m.close+'</span><b>'+short(r.s.toClose)+'</b></li>';
+    }).join('')||'<li class="mk-empty">'+T.none+'</li>'; }
+    var op=els('ex-opening');
+    if(op){ op.innerHTML=closed.slice(0,6).map(function(r){
+      var n=r.s.nextOpen===null?T.wait:short(r.s.nextOpen);
+      return '<li class="mk-item"><b>'+r.m.short+'</b><span class="nm">'+r.m.city+'</span><span class="tm">'+r.m.open+'</span><b>'+n+'</b></li>';
+    }).join(''); }
+  }
+  render();
+  var moreBtn=document.getElementById('ex-clock-more');
+  if(moreBtn){ moreBtn.addEventListener('click', function(){ expanded=!expanded; render(); }); }
+  setInterval(render, 1000);
+  document.addEventListener('hk-lang-changed', render);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) render(); });
 })();
 """
 
@@ -431,24 +582,58 @@ MOTION_JS = """
     var barIO=new IntersectionObserver(function(es){ es.forEach(function(en){ if(en.isIntersecting){ en.target.style.width=en.target.getAttribute('data-w'); barIO.unobserve(en.target); } }); }, {threshold:0.3});
     bars.forEach(function(b){ barIO.observe(b); });
   }
-  // live market status
+  // live market status + open/close countdown
+  var EXC=window.EX_CLOSURES||{};
+  function exZh(){
+    try { if(window.HKI18N&&window.HKI18N.lang&&window.HKI18N.lang()==='zh') return true; } catch(e){}
+    return (document.documentElement.lang||'').indexOf('zh')===0;
+  }
+  function exHol(code, iso){ if(!code) return false; var y=EXC[code]; if(!y) return false; var a=y[iso.slice(0,4)]; return !!a && a.indexOf(iso)>=0; }
+  function exFmt(sec){
+    if(sec===null) return '';
+    sec=Math.max(0,Math.round(sec));
+    if(sec<60) return '<1m';
+    if(sec<3600) return Math.round(sec/60)+'m';
+    var h=Math.floor(sec/3600), m=Math.round(sec%3600/60);
+    return h+'h'+(m?' '+m+'m':'');
+  }
   document.querySelectorAll('[data-live-market]').forEach(function(el){
-    var tz=el.getAttribute('data-tz'), open=el.getAttribute('data-open'), close=el.getAttribute('data-close');
+    var tz=el.getAttribute('data-tz'), open=el.getAttribute('data-open'), close=el.getAttribute('data-close'), code=el.getAttribute('data-code');
     if (!tz) return;
+    var om=(+open.split(':')[0])*60+ +open.split(':')[1], cm=(+close.split(':')[0])*60+ +close.split(':')[1];
     function update(){
       try {
         var now=new Date();
-        var parts=new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(now);
-        var map={}; parts.forEach(function(p){ map[p.type]=p.value; });
-        var wd=map.weekday, hm=map.hour+':'+map.minute;
-        var isWeekend=(wd==='Sat'||wd==='Sun');
-        var isOpen=!isWeekend && hm>=open && hm<close;
-        var dot=el.querySelector('.dot'), label=el.querySelector('[data-live-label]');
+        var f=update._f||(update._f=new Intl.DateTimeFormat('en-GB',{timeZone:tz,weekday:'short',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}));
+        var parts=f.formatToParts(now), map={}; parts.forEach(function(p){ map[p.type]=p.value; });
+        var hm=map.hour+':'+map.minute;
+        var min=(+map.hour)*60+ +map.minute, sec=+map.second;
+        var iso=new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
+        var isWeekend=(map.weekday==='Sat'||map.weekday==='Sun');
+        var isHol=exHol(code, iso);
+        var isOpen=!isWeekend && !isHol && min>=om && min<cm;
+        var dot=el.querySelector('.dot'), label=el.querySelector('[data-live-label]'), cnt=el.querySelector('[data-live-count]');
         if(dot) dot.className='dot '+(isOpen?'open':'closed');
-        if(label) label.textContent=isOpen?'Market open now':'Market closed';
+        var zh=exZh();
+        if(label) label.textContent=isOpen?(zh?'开市中':'Market open now'):(isHol?(zh?'假期休市':'Market holiday'):(zh?'已休市':'Market closed'));
+        if(cnt){
+          if(isOpen){ cnt.textContent=(zh?' · 已开市 ':' · open for ')+exFmt((min-om)*60+sec)+(zh?' · 距收盘 ':' · closes in ')+exFmt((cm-min)*60-sec); }
+          else {
+            var base=new Date(Date.UTC(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10))), nx=null;
+            for(var k=0;k<15&&nx===null;k++){
+              var d=new Date(base.getTime()+k*86400000), wd=d.getUTCDay();
+              if(wd===0||wd===6) continue;
+              var ds=d.toISOString().slice(0,10);
+              if(exHol(code, ds)) continue;
+              if(k===0 && min>=om) continue;
+              nx=(k*1440+om-min)*60-sec;
+            }
+            cnt.textContent=nx===null?'':((zh?' · 距开盘 ':' · opens in ')+exFmt(nx));
+          }
+        }
       } catch(e){}
     }
-    update(); setInterval(update, 30000);
+    update(); setInterval(update, 1000);
   });
   var ua = navigator.userAgent || '';
   var isIOS = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && /Safari/.test(ua));
@@ -685,13 +870,13 @@ SHARE_JS = r"""
 
 
 def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
-         robots: str = "index,follow") -> str:
+         robots: str = "index,follow", hol_href: str = "") -> str:
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
         f'<nav><a href="{base}index.html" data-i18n="nav.ex">Exchanges</a>'
         f'<a href="{base}index.html#map" data-i18n="nav.map">Live map</a>'
-        f'<a href="{base}index.html#closures" data-i18n="nav.hol">Holidays</a>'
+        f'<a href="{hol_href or (base + "index.html#closures")}" data-i18n="nav.hol">Holidays</a>'
         f'<a href="{base}api/index.html" data-i18n="nav.api">API</a>'
         f'<a href="{base}about/index.html" data-i18n="nav.about">About</a></nav>'
         '<select class="lang-select" data-hk-lang aria-label="Language">'
@@ -946,6 +1131,24 @@ def main() -> int:
             except Exception:  # noqa: BLE001
                 continue
 
+    # data for the live market clock (client-side countdown)
+    ex_markets = [
+        {"code": code, "short": short, "city": city, "tz": tz,
+         "open": open_t, "close": close_t, "slug": slug_for(short)}
+        for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES
+        if (code, min(YEARS)) in data
+    ]
+    ex_closures = {}
+    for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
+        per_year = {
+            str(y): [c["date"] for c in data[(code, y)]["closures"]]
+            for y in (current_year, current_year + 1) if (code, y) in data
+        }
+        if per_year:
+            ex_closures[code] = per_year
+    ex_markets_json = json.dumps(ex_markets, ensure_ascii=False)
+    ex_closures_json = json.dumps(ex_closures, ensure_ascii=False)
+
     # homepage
     cards = []
     for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
@@ -962,7 +1165,7 @@ def main() -> int:
         _mx = max(_mon) or 1
         spark = "".join(f'<i style="height:{max(6, v / _mx * 100):.0f}%"></i>' for v in _mon)
         cards.append(
-            f'<a class="card" href="{slug_for(short)}/index.html" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" data-live-market>'
+            f'<a class="card" href="{slug_for(short)}/index.html" data-code="{code}" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" data-live-market>'
             f'<div class="flag">{flag_emoji(cc)}</div><h3>{short}</h3>'
             f'<p>{current["tradingDays"]} trading days in {current_year}</p>'
             f'<span class="spark" aria-hidden="true">{spark}</span>'
@@ -1013,18 +1216,37 @@ def main() -> int:
          "Yes — every exchange page has .ics links for Google Calendar, Apple Calendar and Outlook."),
     ]
     faq_html = "".join(f"<dt>{q}</dt><dd>{a}</dd>" for q, a in faq)
+    clock_section = (
+        '<section class="sec" id="clock">'
+        '<div class="clock-head"><div>'
+        '<h2 data-i18n="clock.h2">Market clock — live open / closed</h2>'
+        '<p class="sub" data-i18n="clock.sub">Live countdown to every open and close. Green cards are trading right now.</p>'
+        '</div><span class="clock-badge" id="ex-clock-badge"><span class="dot"></span>loading…</span></div>'
+        '<div class="clock-wrap">'
+        '<div id="ex-clock"><div class="mk-grid" id="ex-clock-grid"></div>'
+        '<button type="button" class="btn ghost" id="ex-clock-more" style="margin-top:12px"></button></div>'
+        '<aside class="mk-side">'
+        '<div class="mk-panel"><h3><span data-i18n="clock.closing">Closing soon</span></h3>'
+        '<ul class="mk-list" id="ex-closing"></ul></div>'
+        '<div class="mk-panel"><h3><span data-i18n="clock.opening">Opening soon</span></h3>'
+        '<ul class="mk-list" id="ex-opening"></ul></div>'
+        "</aside></div>"
+        '<p class="clock-note" data-i18n="clock.note">Times are each market’s local time. Exchange holidays are skipped automatically.</p>'
+        "</section>"
+    )
     body = (
         '<section class="hero"><p class="eyebrow" data-i18n="hero.eyebrow">Trading days · market holidays · 2025–2028</p>'
         '<h1 data-i18n="hero.h1">Market holidays and trading days.</h1>'
         '<p class="lede" data-i18n="hero.lede">Every closure day for the world\'s major stock exchanges, with trading-day counts, '
         "monthly breakdowns, one-click .ics subscriptions and a free JSON API.</p></section>"
         + map_section
-        + '<section class="sec"><h2 data-i18n="ex.h2">Exchanges</h2>'
+        + clock_section
+        + '<section class="sec" id="closures"><h2 data-i18n="ex.h2">Exchanges</h2>'
         '<p class="sub" data-i18n="ex.sub">Trading days and the next closure for '
         + str(current_year) + ".</p>"
         '<div class="grid">' + "".join(cards) + "</div></section>"
         '<span hidden></span>'
-        '<section class="sec" id="closures"><h2>Why this matters</h2>'
+        '<section class="sec" id="why"><h2>Why this matters</h2>'
         "<p>Settlement, payroll, FX valuation, fund NAV, trading windows and deadline planning all depend on the "
         "exchange calendar — not just public holidays. ExchangeKit gives you the exact list per exchange and year.</p>"
         '<div class="callout">Cross-check with your broker or exchange notice before acting on time-sensitive trades.</div>'
@@ -1035,7 +1257,9 @@ def main() -> int:
         page("Market Holidays & Trading Days — ExchangeKit",
              "Trading days and market holidays for NYSE, NASDAQ, SSE, HKEX, TSE, LSE, Xetra and 25 more exchanges. Free .ics and JSON API.",
              site_url + "/", body,
-             script="<script>window.EX_FOCUS_YEAR=" + str(current_year) + ";</script><script>" + MAP_JS + "</script>"),
+             script=("<script>window.EX_FOCUS_YEAR=" + str(current_year) + ";</script>"
+                     "<script>window.EX_MARKETS=" + ex_markets_json + ";window.EX_CLOSURES=" + ex_closures_json + ";</script>"
+                     "<script>" + MAP_JS + "</script><script>" + CLOCK_JS + "</script>")),
         encoding="utf-8",
     )
     urls.append("")
@@ -1054,8 +1278,9 @@ def main() -> int:
             for y in YEARS if (code, y) in data
         )
         status_html = (
-            f'<p class="status" data-live-market data-tz="{tz}" data-open="{open_t}" data-close="{close_t}">'
-            f'<span class="dot"></span><span data-live-label>{city}</span></p>'
+            f'<p class="status" data-live-market data-code="{code}" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}">'
+            f'<span class="dot"></span><span data-live-label>{city}</span>'
+            '<span class="live-count" data-live-count></span></p>'
         )
         (exdir / "index.html").write_text(
             page(f"{short} Market Holidays & Trading Days — {name}",
@@ -1064,12 +1289,13 @@ def main() -> int:
                  f'<section class="hero"><p class="eyebrow">{cc} · {city}</p>'
                  f'<h1><span class="flag">{flag_emoji(cc)}</span> {short}</h1>'
                  f'<p class="lede">{name} — trading days and closure days by year.</p>{status_html}</section>'
-                 '<section class="sec"><h2>By year</h2><div class="tbl-wrap"><table><thead><tr>'
+                 '<section class="sec" id="holidays"><h2>By year</h2><div class="tbl-wrap"><table><thead><tr>'
                  "<th>Year</th><th>Trading days</th><th>Market holidays</th></tr></thead><tbody>"
                  + year_rows + "</tbody></table></div></section>"
                  + subscribe_block(short, slug, YEARS[1] if (code, YEARS[1]) in data else YEARS[0], site_url)
                  + f'<p><a href="../index.html">← All exchanges</a></p>',
-                 base="../../"),
+                 base="../../", hol_href="#holidays",
+                 script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"),
             encoding="utf-8",
         )
         urls.append(f"{slug}/")
@@ -1134,6 +1360,9 @@ def main() -> int:
                      f'<h1><span class="flag">{flag_emoji(cc)}</span> {short} market holidays in {y}</h1>'
                      f'<div class="chips"><span class="chip">{d["tradingDays"]} trading days</span>'
                      f'<span class="chip">{len(d["closures"])} market holidays</span></div>'
+                     f'<p class="status" data-live-market data-code="{code}" data-tz="{tz}" data-open="{open_t}" data-close="{close_t}" style="margin-top:12px">'
+                     '<span class="dot"></span><span data-live-label></span>'
+                     '<span class="live-count" data-live-count></span></p>'
                      '<div class="cta-row" style="margin-top:20px">'
                      '<button type="button" class="btn-share-hot" data-share-open>'
                      '<span aria-hidden="true">✨</span> 生成分享卡片 · Share card</button>'
@@ -1144,13 +1373,14 @@ def main() -> int:
                      '<div class="bars">' + bars + "</div>"
                      + f'<p class="viz-note">Trading days per month in {y}. Shorter bars mean more market '
                      "holidays (or fewer weekdays) in that month.</p></section>"
-                     '<section class="sec"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
+                     '<section class="sec" id="holidays"><h2>Market holidays</h2><div class="tbl-wrap"><table><thead><tr>'
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
                      + subscribe_block(short, slug, y, site_url)
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
-                     base="../../../",
-                     script="<script>window.EX_SHARE="
+                     base="../../../", hol_href="#holidays",
+                     script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"
+                     "<script>window.EX_SHARE="
                      + json.dumps({
                          "short": short,
                          "name": name,
