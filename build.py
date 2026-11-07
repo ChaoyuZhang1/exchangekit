@@ -29,7 +29,8 @@ import pandas_market_calendars as mcal
 ROOT = Path(__file__).resolve().parent
 HK = ROOT.parent / "holiday-kit"
 sys.path.insert(0, str(HK / "scripts"))
-from build_site import COUNTRY_NAMES, flag_emoji, slugify  # noqa: E402
+from build_site import (COUNTRY_NAMES, flag_emoji, slugify,  # noqa: E402
+                        deemoji, PAGE_SHARE_JS)
 
 SITE_NAME = "ExchangeKit"
 SITE_TAGLINE = "Trading days and market holidays for the world's exchanges."
@@ -662,7 +663,19 @@ MOTION_JS = """
 """
 
 
+
 SHARE_CSS = """
+.ic{display:inline-block;vertical-align:-0.14em;flex:none}
+.kpi-ico .ic{width:20px;height:20px}
+.sec-h-ico{display:inline-flex;align-items:center;justify-content:center;vertical-align:-2px}
+.sec-h-ico .ic{width:18px;height:18px;stroke-width:1.9}
+h3 .ic{width:.95em;height:.95em;vertical-align:-0.08em;opacity:.85}
+.cd-ico .ic{width:18px;height:18px;color:#7dd3a8}
+.flag{font-size:.66rem;font-weight:800;letter-spacing:.09em;color:var(--muted);
+  background:rgba(15,23,42,.05);border:1px solid var(--line);border-radius:7px;
+  padding:3px 7px;display:inline-block;line-height:1.2;vertical-align:2px;text-align:center;min-width:2.1em}
+h1 .flag{font-size:.30em;letter-spacing:.10em;vertical-align:.55em;padding:3px 7px;opacity:.85}
+
 .share-modal{position:fixed;inset:0;z-index:80;background:rgba(8,12,18,.66);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
 .share-modal.on{display:flex}
 .share-panel{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:18px;max-width:min(780px,96vw);max-height:94vh;overflow:auto;box-shadow:0 30px 80px rgba(10,16,24,.35)}
@@ -895,7 +908,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<a href="https://holidaykit.pages.dev">Holiday calendars</a></p>'
         "</div></footer>"
     )
-    return (
+    html = (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f"<title>{title}</title>"
@@ -905,8 +918,9 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         f"<style>{CSS}{MAP_CSS}{SHARE_CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
-        f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}</body></html>"
+        f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
     )
+    return deemoji(html)
 
 
 FAVICON = (
