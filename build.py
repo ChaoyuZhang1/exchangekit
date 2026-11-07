@@ -30,10 +30,24 @@ ROOT = Path(__file__).resolve().parent
 HK = ROOT.parent / "holiday-kit"
 sys.path.insert(0, str(HK / "scripts"))
 from build_site import (COUNTRY_NAMES, flag_emoji, slugify,  # noqa: E402
-                        deemoji, PAGE_SHARE_JS)
+                        deemoji, PAGE_SHARE_JS, SEARCH_CSS, SEARCH_JS)
 
 SITE_NAME = "ExchangeKit"
+SITE_URL = "https://exchangekit.pages.dev"
 SITE_TAGLINE = "Trading days and market holidays for the world's exchanges."
+_WEBSITE_LD = json.dumps({
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": SITE_NAME,
+    "url": SITE_URL + "/",
+    "description": SITE_TAGLINE,
+    "potentialAction": {
+        "@type": "SearchAction",
+        "target": {"@type": "EntryPoint",
+                   "urlTemplate": SITE_URL + "/?q={search_term_string}"},
+        "query-input": "required name=search_term_string",
+    },
+}, ensure_ascii=False)
 YEARS = [2025, 2026, 2027, 2028]
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
@@ -887,6 +901,10 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
+        '<button type="button" class="nav-search" data-search-open aria-label="Search">'
+        '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="1.9" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/>'
+        '<path d="M15.5 15.5L21 21"/></svg><span>Search</span><kbd>⌘K</kbd></button>'
         f'<nav><a href="{base}index.html" data-i18n="nav.ex">Exchanges</a>'
         f'<a href="{base}index.html#map" data-i18n="nav.map">Live map</a>'
         f'<a href="{base}api/index.html" data-i18n="nav.api">API</a>'
@@ -916,8 +934,19 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<link rel="canonical" href="{canonical}">'
         f'<meta name="robots" content="{robots}">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}</style></head><body>{nav}"
+        f'<meta property="og:type" content="website">'
+        f'<meta property="og:title" content="{title}">'
+        f'<meta property="og:description" content="{desc}">'
+        f'<meta property="og:url" content="{canonical}">'
+        f'<meta property="og:image" content="{SITE_URL}/og-cover.png">'
+        '<meta property="og:image:width" content="1200">'
+        '<meta property="og:image:height" content="630">'
+        '<meta name="twitter:card" content="summary_large_image">'
+        f'<script type="application/ld+json">{_WEBSITE_LD}</script>'
+        f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SEARCH_CSS}</style></head><body>{nav}"
         f'<main class="wrap">{body}</main>{foot}'
+        f'<script>window.HK_BASE="{base}";</script>'
+        f"<script>{SEARCH_JS}</script>"
         f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
     )
     return deemoji(html)
@@ -1323,6 +1352,23 @@ def main() -> int:
                 f'<td>{c["weekday"]}</td><td>{c["name"]}</td></tr>'
                 for c in d["closures"]
             )
+            _sibs = [
+                (slug_for(_s2), _s2)
+                for _c2, _n2, _s2, _cc2, *_rest in EXCHANGES
+                if _cc2 == cc and _c2 != code and (_c2, y) in data
+            ]
+            rel_html = ""
+            if _sibs:
+                rel_html = (
+                    "<section class=\"sec\"><h2>Other "
+                    + (COUNTRY_NAMES.get(cc) or cc)
+                    + " exchanges</h2><div class=\"chips\">"
+                    + "".join(
+                        f'<a class="chip" href="../../{_sg}/{y}/index.html">{_s} {y}</a>'
+                        for _sg, _s in _sibs
+                    )
+                    + "</div></section>"
+                )
             max_m = max(d["monthly"][1:] + [1])
             bars = "".join(
                 f'<div class="bar-row"><span>{MONTHS[i-1]}</span>'
@@ -1390,6 +1436,7 @@ def main() -> int:
                      "<th>Date</th><th>Day</th><th>Holiday</th></tr></thead><tbody>"
                      + closure_rows + "</tbody></table></div></section>"
                      + subscribe_block(short, slug, y, site_url)
+                     + rel_html
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
                      base="../../../", hol_href="#holidays",
                      script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"
@@ -1572,14 +1619,40 @@ def main() -> int:
         )
         urls.append(f"{path}/")
 
+    # ── site search index ──
+    search_entries = []
+    for code, name, short, cc, city, tz, open_t, close_t in EXCHANGES:
+        if (code, YEARS[0]) not in data:
+            continue
+        slug_ = slug_for(short)
+        search_entries.append({"t": f"{short} — {name}", "s": f"Trading days · {city}",
+                               "u": f"/{slug_}/", "k": "exchange"})
+        for y in YEARS:
+            if (code, y) in data:
+                d_ = data[(code, y)]
+                search_entries.append({"t": f"{short} {y}", "s": f"{d_['tradingDays']} trading days · {len(d_['closures'])} closures",
+                                       "u": f"/{slug_}/{y}/", "k": "year"})
+    for _p, _t, _s in [
+        ("api/", "Free JSON API", "Trading days and market holidays"),
+        ("about/", "About", "Method and data sources"),
+        ("support/", "Support", "Keep the project free"),
+    ]:
+        search_entries.append({"t": _t, "s": _s, "u": f"/{_p}", "k": "page"})
+    (out / "search-index.json").write_text(
+        json.dumps(search_entries, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
     (out / "favicon.svg").write_text(FAVICON, encoding="utf-8")
+    _og = ROOT / "assets" / "og-cover.png"
+    if _og.exists():
+        (out / "og-cover.png").write_bytes(_og.read_bytes())
     (out / "support").mkdir(exist_ok=True)
     (out / "support" / "index.html").write_text(page_support(site_url), encoding="utf-8")
     urls.append("support/")
     (out / "_headers").write_text(
         "/*.ics\n  Content-Type: text/calendar; charset=utf-8\n  Cache-Control: public, max-age=3600\n"
         "/api/*\n  Access-Control-Allow-Origin: *\n  Cache-Control: public, max-age=86400\n"
-        "/assets/support/*\n  Cache-Control: public, max-age=604800\n",
+        "/assets/support/*\n  Cache-Control: public, max-age=604800\n"
+        "/search-index.json\n  Cache-Control: public, max-age=3600\n",
         encoding="utf-8",
     )
     support_dir = ROOT / "assets" / "support"
