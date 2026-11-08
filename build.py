@@ -31,6 +31,8 @@ ROOT = Path(__file__).resolve().parent
 HK = ROOT.parent / "holiday-kit"
 sys.path.insert(0, str(HK / "scripts"))
 from build_site import (COUNTRY_NAMES, flag_emoji, slugify,  # noqa: E402
+    SISTER_CSS,
+    sister_html,
                         deemoji, PAGE_SHARE_JS, SEARCH_CSS, SEARCH_JS,
                         support_strip, SUPPORT_CSS, hide_api, SHOW_API,
                           clean_links, faq_block, faq_json_ld)
@@ -935,7 +937,7 @@ _CSS_CACHE: dict[str, str] = {}
 
 def _css_bundle() -> str:
     if "css" not in _CSS_CACHE:
-        bundle = CSS + MAP_CSS + SHARE_CSS + SUPPORT_CSS + SEARCH_CSS + CRUMB_CSS
+        bundle = CSS + MAP_CSS + SHARE_CSS + SUPPORT_CSS + SEARCH_CSS + CRUMB_CSS + SISTER_CSS
         _CSS_CACHE["css"] = bundle
         _CSS_CACHE["ver"] = hashlib.md5(bundle.encode("utf-8")).hexdigest()[:10]
     return _CSS_CACHE["css"]
@@ -975,10 +977,9 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         f'<p><span data-i18n="foot.note">Schedules follow the official holiday calendar of each exchange.</span> '
         "For planning only — confirm with the exchange for critical dates.</p>"
         f'<p><a href="{base}privacy/index.html">Privacy</a> · <a href="{base}about/index.html">About</a> · '
-        f'<a href="{base}support/index.html">♥ Support · 打赏</a> · '
-        f'<a href="https://workdaykit.pages.dev">Business days calculator</a> · '
-        f'<a href="https://holidaykit.pages.dev">Holiday calendars</a></p>'
+        f'<a href="{base}support/index.html">♥ Support · 打赏</a></p>'
         + lang_links(base)
+        + sister_html(SITE_NAME)
         + "</div></footer>"
     )
     _ex_crumb_html, _ex_crumb_ld = ("", "")
