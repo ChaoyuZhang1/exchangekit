@@ -31,7 +31,8 @@ HK = ROOT.parent / "holiday-kit"
 sys.path.insert(0, str(HK / "scripts"))
 from build_site import (COUNTRY_NAMES, flag_emoji, slugify,  # noqa: E402
                         deemoji, PAGE_SHARE_JS, SEARCH_CSS, SEARCH_JS,
-                        support_strip, SUPPORT_CSS, hide_api, SHOW_API)
+                        support_strip, SUPPORT_CSS, hide_api, SHOW_API,
+                          clean_links, faq_block, faq_json_ld)
 
 SITE_NAME = "ExchangeKit"
 SITE_URL = "https://exchangekit.pages.dev"
@@ -930,7 +931,10 @@ def _crumb_block(crumbs, canonical: str, esc_fn=None) -> tuple:
 
 def page(title: str, desc: str, canonical: str, body: str, base: str = "", script: str = "",
          robots: str = "index,follow", hol_href: str = "", crumbs: list | None = None,
-         lang: str = "en", alternates: str = "") -> str:
+         lang: str = "en", alternates: str = "",
+         json_ld: str = "") -> str:
+    _json_ld_script = (f'<script type="application/ld+json">{json_ld}</script>'
+                       if json_ld else "")
     nav = (
         '<header class="site-head"><div class="wrap head-inner">'
         f'<a class="brand" href="{base}index.html"><span class="brand-mark">◈</span>{SITE_NAME}</a>'
@@ -986,6 +990,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         '<meta property="og:image:height" content="630">'
         '<meta name="twitter:card" content="summary_large_image">'
         f'<script type="application/ld+json">{_WEBSITE_LD}</script>'
+        f"{_json_ld_script}"
         f"<style>{CSS}{MAP_CSS}{SHARE_CSS}{SUPPORT_CSS}{SEARCH_CSS}{CRUMB_CSS}</style></head><body>{nav}"
         + _ex_crumb_head
         + f'<main class="wrap">{_ex_crumb_html}{body}</main>{foot}'
@@ -993,7 +998,7 @@ def page(title: str, desc: str, canonical: str, body: str, base: str = "", scrip
         + f"<script>{SEARCH_JS}</script>"
         + f"<script>{MOTION_JS}</script><script>{I18N_JS}</script>{script}<script>{PAGE_SHARE_JS}</script></body></html>"
     )
-    return hide_api(deemoji(html))
+    return clean_links(hide_api(deemoji(html)))
 
 
 FAVICON = (
@@ -1540,6 +1545,17 @@ def main() -> int:
                 f"({len(d['closures'])} closure dates, including weekend-adjacent ones listed below).</p>"
                 "</section>"
             )
+            faq = [
+                (f"How many trading days does {short} have in {y}?",
+                 f"{d['tradingDays']} trading days in {y}, after weekends and "
+                 f"{len(d['closures'])} market holidays are removed."),
+                (f"Which days is {short} closed in {y}?",
+                 "The full closure list is in the table above, including holidays that fall next to a "
+                 "weekend."),
+                (f"Can I subscribe to the {short} holiday calendar?",
+                 "Yes — the calendar.ics link on this page imports every closure date straight into Google "
+                 "Calendar, Apple Calendar or Outlook."),
+            ]
             (ydir / "index.html").write_text(
                 page(f"{short} Market Holidays {y} — {d['tradingDays']} trading days",
                      f"{short} ({name}) market holidays and trading days in {y}: {d['tradingDays']} trading days, "
@@ -1567,8 +1583,10 @@ def main() -> int:
                      + closure_rows + "</tbody></table></div></section>"
                      + subscribe_block(short, slug, y, site_url)
                      + rel_html
+                     + '<section class="sec"><h2>Frequently asked questions</h2>' + faq_block(faq) + "</section>"
                      + f'<p><a href="../index.html">← {short} overview</a></p>',
                      base="../../../", hol_href="#holidays",
+                     json_ld=faq_json_ld(faq),
                      crumbs=[("Home", "../../../index.html"), ("Exchanges", "../../../index.html#closures"),
                              (short, "../../index.html"), (str(y), "")],
                      script="<script>window.EX_CLOSURES=" + json.dumps({code: ex_closures.get(code, {})}, ensure_ascii=False) + ";</script>"
